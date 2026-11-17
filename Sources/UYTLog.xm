@@ -643,6 +643,13 @@ NSString *UYTDebugFullReport(void) {
         [s appendFormat:@"\n---- RECENT TWEAK ACTIVITY (%lu distinct) ----\n", (unsigned long)recent.count];
         UYTAppendGroups(s, recent, 300, 40, YES);
 
+        NSString *castSection = UYTCastReportSection();
+        if (castSection.length) {
+            [s appendString:@"\n"];
+            [s appendString:castSection];
+            if (![castSection hasSuffix:@"\n"]) [s appendString:@"\n"];
+        }
+
         NSString *selPath = [UYTDocDir() stringByAppendingPathComponent:@"uYouUnrecognizedSelector.log"];
         if ([[NSFileManager defaultManager] fileExistsAtPath:selPath]) {
             NSString *selText = [NSString stringWithContentsOfFile:selPath encoding:NSUTF8StringEncoding error:nil] ?: @"(unreadable)";

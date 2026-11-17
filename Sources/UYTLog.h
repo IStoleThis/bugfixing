@@ -21,6 +21,9 @@ NSString *UYTDebugErrors(void);
 NSString *UYTDebugLogText(NSUInteger lastLines);
 NSString *UYTDebugFullReport(void);
 
+// Defined in uYouPlusCastingDiagnostics.xm: the cast timeline and the tail of the Cast SDK log, for the report ("" when off).
+NSString *UYTCastReportSection(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -313,6 +313,10 @@
 
 "FIX_PLAYBACK_ISSUES" = "Fix playback issues";
 "FIX_PLAYBACK_ISSUES_DESC" = "Automatically recovers playback when a video stops or errors out mid-playback (e.g. after about a minute). Recommended for everyone.";
+"CASTING_STAY_ON_CAST" = "Keep Casting on the Cast Connection";
+"CASTING_STAY_ON_CAST_DESC" = "Stops YouTube from moving a cast over to the TV's own YouTube app (Media Hub), which can end the cast after a few seconds and start ads on the TV. Turn this off if casting gets worse.";
+"CASTING_DIAGNOSTICS" = "Casting Diagnostics";
+"CASTING_DIAGNOSTICS_DESC" = "Records what happens to a cast, and turns on the Cast SDK's own log, so both can be added to the Debug Logs export. Nothing is sent anywhere.";
 "FAKE_PREMIUM" = "Premium ปลอม";
 "FAKE_PREMIUM_DESC" = "ใช้โลโก้ Premium และสร้างปุ่มปลอมในแท็บ You จะปิดการใช้งานโลโก้ YouTube อนิเมชั่น";
 "FAKE_PREMIUM_WARNING" = "แท็บ You ไม่มีใน v%@, ปุ่มปลอมจะไม่ได้สร้างขึ้น \nแต่ โลโก้ Premium ปลอม จะยังคงทำงาน";

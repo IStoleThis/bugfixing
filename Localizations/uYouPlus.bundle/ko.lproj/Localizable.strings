@@ -313,6 +313,10 @@
 
 "FIX_PLAYBACK_ISSUES" = "Fix playback issues";
 "FIX_PLAYBACK_ISSUES_DESC" = "Automatically recovers playback when a video stops or errors out mid-playback (e.g. after about a minute). Recommended for everyone.";
+"CASTING_STAY_ON_CAST" = "Keep Casting on the Cast Connection";
+"CASTING_STAY_ON_CAST_DESC" = "Stops YouTube from moving a cast over to the TV's own YouTube app (Media Hub), which can end the cast after a few seconds and start ads on the TV. Turn this off if casting gets worse.";
+"CASTING_DIAGNOSTICS" = "Casting Diagnostics";
+"CASTING_DIAGNOSTICS_DESC" = "Records what happens to a cast, and turns on the Cast SDK's own log, so both can be added to the Debug Logs export. Nothing is sent anywhere.";
 "FAKE_PREMIUM" = "가짜 Premium";
 "FAKE_PREMIUM_DESC" = "You 탭에 프리미엄 로고와 가짜 버튼을 보여줍니다.";
 "FAKE_PREMIUM_WARNING" = "*You* 탭은 v%@ 버전에는 없으므로 가자 버튼을 표시할 수 없습니다.\n하지만 *가짜 프리미엄 로고*는 보여줍니다.";

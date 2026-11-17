@@ -39,6 +39,7 @@ NSArray *NSUserDefaultsCopyKeys = @[
     kHideChannelHeaderLinks, kiPhoneLayout, kBigYTMiniPlayer,
     kAutoHideHomeBar, kHideSubscriptionsNotificationBadge,
     kNewSettingsUI, kFlex, kGoogleSigninFix, kHideYouTubeFeatured,
+    kCastingStayOnCast, kCastingDiagnostics,
 
     @"showedWelcomeVC", @"hideShortsTab", @"hideCreateTab", @"hideUYouTab",
     @"hideCastButton", @"relatedVideosAtTheEndOfYTVideos",
@@ -68,6 +69,8 @@ NSArray *NSUserDefaultsCopyKeys = @[
 
 NSDictionary *NSUserDefaultsCopyKeysDefaults = @{
     @"fixCasting_enabled": @1,
+    @"castingStayOnCast_enabled": @1,
+    @"castingDiagnostics_enabled": @1,
     @"adBlockWorkaround_enabled": @1,
     @"adBlockWorkaroundLite_enabled": @0,
     @"hideShortsTab": @1,

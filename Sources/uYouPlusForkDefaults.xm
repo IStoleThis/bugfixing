@@ -5,6 +5,8 @@
 //   * Shorts, Create (+) and uYou tabs hidden. uYou reads these three switches every time the tab bar is built, so they
 //     do not need a restart on top of the first launch.
 //   * "YouTube featured" shelf on the Home feed hidden (HideYouTubeFeatured.xm).
+//   * Casting: "Keep Casting on the Cast Connection" (uYouPlusCastingStayOnCast.xm) and the casting diagnostics
+//     (uYouPlusCastingDiagnostics.xm) on.
 //
 // This is a versioned, run-once migration rather than "set it when the key is missing". An install that was updated from an
 // earlier build already holds stored values for some of these keys (the ad-block switches are written on the first launch),
@@ -40,9 +42,13 @@ void UYTApplyForkDefaults(void) {
         // Home feed.
         [defaults setBool:YES forKey:kHideYouTubeFeatured];
 
+        // Casting.
+        [defaults setBool:YES forKey:kCastingStayOnCast];
+        [defaults setBool:YES forKey:kCastingDiagnostics];
+
         [defaults setInteger:kForkDefaultsVersion forKey:kForkDefaultsVersionKey];
 
         UYTLogInstall();
-        UYTDebugInfo(@"ForkDefaults v%ld applied: AdBlock Workaround on, Shorts/Create/uYou tabs hidden, YouTube featured shelf hidden", (long)kForkDefaultsVersion);
+        UYTDebugInfo(@"ForkDefaults v%ld applied: AdBlock Workaround on, Shorts/Create/uYou tabs hidden, YouTube featured shelf hidden, casting switches on", (long)kForkDefaultsVersion);
     });
 }
