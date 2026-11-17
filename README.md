@@ -322,7 +322,10 @@
 # Frequently asked questions
 
 **Q: Casting to a TV/Chromecast stopped working.**
-Enable **Fix Casting** in YTweak's settings and restart the app. It adjusts the A/B flags that currently break casting in recent YouTube versions.
+Sideloaded builds often get a "Local Network access is required" prompt when casting, even though the permission is already on in iOS Settings. **Fix Casting** (YTweaks settings, on by default) changes the A/B flags behind that check, but it is only documented to work up to YouTube **20.10.4** ([YTweaks README](https://github.com/fosterbarnes/YTweaks#supported-youtube-versions); the [YouTube Plus FAQ](https://teletype.in/@dvntm/ytplus_faq) says 20.14.1). On newer versions no tweak-level fix is known yet.
+- Build with a YouTube IPA at or below 20.10.4, and restart the app after changing Fix Casting.
+- Or pair the TV manually with its code, or use AirPlay if the TV supports it.
+- Run the **Casting Preflight** workflow (Actions tab) with your IPA URL to see which casting flags that YouTube version still contains. Every build adds the same report to its run summary.
 
 **Q: YouTube shows an "Update required" / "Please update" screen.**
 Enable **Enable App Version Spoofer** in uYouEnhanced's settings, pick a newer YouTube version from **Version spoofer selector**, and restart the app.

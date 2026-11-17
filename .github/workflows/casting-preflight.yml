@@ -1,0 +1,43 @@
+name: Casting Preflight
+
+# Quick check, no build: downloads a decrypted YouTube IPA and reports which
+# casting / local-network A/B flags exist in that YouTube version.
+# The report appears on the run's summary page.
+
+on:
+  workflow_dispatch:
+    inputs:
+      decrypted_youtube_url:
+        description: "Direct URL of the decrypted YouTube IPA"
+        default: ""
+        required: true
+        type: string
+
+jobs:
+  preflight:
+    name: Casting preflight
+    runs-on: macos-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Hash YT ipa url
+        run: |
+          URL_YT="$(jq -r '.inputs.decrypted_youtube_url' $GITHUB_EVENT_PATH)"
+          echo ::add-mask::$URL_YT
+          echo URL_YT=$URL_YT >> $GITHUB_ENV
+
+      - name: Download and unpack the YouTube IPA
+        run: |
+          curl -fsL "$YOUTUBE_URL" -o YouTube.ipa || { echo "::error::Could not download the IPA (check the URL)"; exit 1; }
+          mkdir ipa
+          unzip -q YouTube.ipa -d ipa
+        env:
+          YOUTUBE_URL: ${{ env.URL_YT }}
+
+      - name: Casting preflight report
+        run: |
+          python3 Scripts/casting-preflight/casting_preflight.py ipa/Payload/YouTube.app >> "$GITHUB_STEP_SUMMARY"

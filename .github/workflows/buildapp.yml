@@ -168,6 +168,11 @@ jobs:
         env:
           YOUTUBE_URL: ${{ env.URL_YT }}
 
+      - name: Casting preflight
+        continue-on-error: true
+        run: |
+          python3 main/Scripts/casting-preflight/casting_preflight.py main/Payload/YouTube.app --version "$YT_VERSION" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Restore FFmpegKit cache
         id: ffmpeg_cache
         uses: actions/cache/restore@v6

@@ -56,6 +56,18 @@ with a selector audit plus reference dumps in `refdata/`.
 | `resolve_selref.py` | Decode chained-fixup selector slots into selector strings |
 | `hunt_cstring.py` | Dump `__cstring` strings from a Mach-O matching a regex |
 
+### 📡 Casting preflight — `Scripts/casting-preflight/`
+
+`.github/workflows/casting-preflight.yml` (and a step in the build workflow) runs
+`casting_preflight.py` on a decrypted `YouTube.app` and writes a Markdown report to the run
+summary: which of the A/B flags used by *Fix Casting* exist in that YouTube version, every
+selector / class / string that mentions the local network, the Bonjour keys in `Info.plist`,
+and the networking entitlements of the original signature.
+
+| Script | Purpose |
+|---|---|
+| `casting_preflight.py` | Static Mach-O scan of a decrypted `YouTube.app` (stdlib only): `python3 Scripts/casting-preflight/casting_preflight.py Payload/YouTube.app [--version 20.44.2]` |
+
 ## Typical crash debugging flow
 
 1. Crash happens → pull the `.ips` from the device

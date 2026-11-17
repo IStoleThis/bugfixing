@@ -2049,5 +2049,9 @@ static NSMutableArray <YTIItemSectionRenderer *> *filteredShortsArray(NSArray <Y
     if (![allKeys containsObject:@"newSettingsUI_enabled"]) {
         [[NSUserDefaults standardUserDefaults] setBool:YES forKey:kNewSettingsUI];
     }
+    // YTweaks reads this key for its Fix Casting hooks. Older builds turned it on by default; keep that.
+    if (![allKeys containsObject:kFixCasting]) {
+        [[NSUserDefaults standardUserDefaults] setBool:YES forKey:kFixCasting];
+    }
 }
 
