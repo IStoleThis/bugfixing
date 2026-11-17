@@ -38,9 +38,9 @@ NSArray *NSUserDefaultsCopyKeys = @[
     kShowNotificationsTab, kHidePlayNextInQueue, kHideCommunityPosts,
     kHideChannelHeaderLinks, kiPhoneLayout, kBigYTMiniPlayer,
     kAutoHideHomeBar, kHideSubscriptionsNotificationBadge,
-    kNewSettingsUI, kFlex, kGoogleSigninFix,
+    kNewSettingsUI, kFlex, kGoogleSigninFix, kHideYouTubeFeatured,
 
-    @"showedWelcomeVC", @"hideShortsTab", @"hideCreateTab",
+    @"showedWelcomeVC", @"hideShortsTab", @"hideCreateTab", @"hideUYouTab",
     @"hideCastButton", @"relatedVideosAtTheEndOfYTVideos",
     @"removeYouTubeAds", @"backgroundPlayback", @"disableAgeRestriction",
     @"iPadLayout", @"noSuggestedVideoAtEnd", @"shortsProgressBar",
@@ -68,6 +68,12 @@ NSArray *NSUserDefaultsCopyKeys = @[
 
 NSDictionary *NSUserDefaultsCopyKeysDefaults = @{
     @"fixCasting_enabled": @1,
+    @"adBlockWorkaround_enabled": @1,
+    @"adBlockWorkaroundLite_enabled": @0,
+    @"hideShortsTab": @1,
+    @"hideCreateTab": @1,
+    @"hideUYouTab": @1,
+    @"hideYouTubeFeatured_enabled": @1,
     @"inline_muted_playback_enabled": @5,
     @"newSettingsUI_enabled": @1,
     @"DEMC_safeAreaConstant": @21.5,

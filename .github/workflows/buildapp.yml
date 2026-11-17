@@ -63,7 +63,7 @@ on:
         type: boolean
       sponsorblock:
         description: "Include iSponsorBlock"
-        default: false
+        default: true
         required: false
         type: boolean
 

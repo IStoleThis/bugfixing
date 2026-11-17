@@ -277,6 +277,8 @@
 "UI_INTERFACE_OPTIONS" = "UI Interface Options";
 
 "HIDE_HOME_TAB" = "隐藏 Home Tab";
+"HIDE_SHORTS_TAB" = "Hide Shorts Tab";
+"HIDE_CREATE_TAB" = "Hide Create Tab";
 
 "SHOW_NOTIFICATIONS_TAB" = "Enable Notifications Tab";
 "SHOW_NOTIFICATIONS_TAB_DESC" = "Makes the Notifications Tab appear back onto the Pivot Bar, experimental: Testing customization options.";
@@ -325,6 +327,8 @@
 "STICK_NAVIGATION_BAR_DESC" = "This will make the Navigation Bar stay when scrolling throughout the App.";
 "HIDE_COMMUNITY_POSTS" = "隐藏 Community Posts";
 "HIDE_COMMUNITY_POSTS_DESC" = "隐藏Community Posts. 更改后需要重启应用。";
+"HIDE_YOUTUBE_FEATURED" = "Hide YouTube Featured Shelf";
+"HIDE_YOUTUBE_FEATURED_DESC" = "Hides YouTube's own \"YouTube featured\" promo shelf (for example \"Your home for ...\") on the Home feed. Applies the next time the feed loads.";
 "HIDE_HEADER_LINKS_UNDER_PROFILE" = "隐藏 Header Links under channel profile";
 "HIDE_HEADER_LINKS_UNDER_PROFILE_DESC" = "隐藏sthe Header Links under any channel profile.";
 "AUTO_HIDE_HOME_INDICATOR" = "自动隐藏主页面小白条";

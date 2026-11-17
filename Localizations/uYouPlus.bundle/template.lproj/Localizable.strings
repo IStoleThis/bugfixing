@@ -290,6 +290,8 @@ https://github.com/PoomSmart/Return-YouTube-Dislikes/tree/main/layout/Library/Ap
 "UI_INTERFACE_OPTIONS" = "UI Interface Options";
 
 "HIDE_HOME_TAB" = "Hide Home Tab";
+"HIDE_SHORTS_TAB" = "Hide Shorts Tab";
+"HIDE_CREATE_TAB" = "Hide Create Tab";
 
 "SHOW_NOTIFICATIONS_TAB" = "Enable Notifications Tab";
 "SHOW_NOTIFICATIONS_TAB_DESC" = "Makes the Notifications Tab appear back onto the Pivot Bar, experimental: Testing customization options.";
@@ -338,6 +340,8 @@ https://github.com/PoomSmart/Return-YouTube-Dislikes/tree/main/layout/Library/Ap
 "STICK_NAVIGATION_BAR_DESC" = "This will make the Navigation Bar stay when scrolling throughout the App.";
 "HIDE_COMMUNITY_POSTS" = "Hide Community Posts";
 "HIDE_COMMUNITY_POSTS_DESC" = "Hides the Community Posts. App restart is required.";
+"HIDE_YOUTUBE_FEATURED" = "Hide YouTube Featured Shelf";
+"HIDE_YOUTUBE_FEATURED_DESC" = "Hides YouTube's own \"YouTube featured\" promo shelf (for example \"Your home for ...\") on the Home feed. Applies the next time the feed loads.";
 "HIDE_HEADER_LINKS_UNDER_PROFILE" = "Hide Header Links under channel profile";
 "HIDE_HEADER_LINKS_UNDER_PROFILE_DESC" = "Hides the Header Links under any channel profile.";
 "AUTO_HIDE_HOME_INDICATOR" = "Auto-Hide Home Indicator";

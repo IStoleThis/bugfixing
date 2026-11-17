@@ -527,6 +527,11 @@ NSString *cacheDescription = [NSString stringWithFormat:@"%@", GetCacheSize()];
     SECTION_HEADER(LOC(@"UI_INTERFACE_OPTIONS"));
 
     SWITCH2(LOC(@"HIDE_HOME_TAB"), LOC(@"RESTART_REQUIRED"), kHideHomeTab);
+    // The next three are uYou's own switches (it reads these keys when it builds the tab bar). They are listed here as well because
+    // this fork hides these tabs by default, and the uYou tab is one way to reach uYou's settings.
+    SWITCH2(LOC(@"HIDE_SHORTS_TAB"), LOC(@"RESTART_REQUIRED"), @"hideShortsTab");
+    SWITCH2(LOC(@"HIDE_CREATE_TAB"), LOC(@"RESTART_REQUIRED"), @"hideCreateTab");
+    SWITCH2(LOC(@"HIDE_UYOU"), LOC(@"RESTART_REQUIRED"), @"hideUYouTab");
     SWITCH3(
         LOC(@"LOW_CONTRAST_MODE"),
         LOC(@"LOW_CONTRAST_MODE_DESC"),
@@ -942,6 +947,7 @@ NSString *cacheDescription = [NSString stringWithFormat:@"%@", GetCacheSize()];
     [sectionItems addObject:notificationIconStyle];
     SWITCH(LOC(@"HIDE_PLAY_NEXT_IN_QUEUE"), LOC(@"HIDE_PLAY_NEXT_IN_QUEUE_DESC"), kHidePlayNextInQueue);
     SWITCH2(LOC(@"HIDE_COMMUNITY_POSTS"), LOC(@"HIDE_COMMUNITY_POSTS_DESC"), kHideCommunityPosts);
+    SWITCH(LOC(@"HIDE_YOUTUBE_FEATURED"), LOC(@"HIDE_YOUTUBE_FEATURED_DESC"), kHideYouTubeFeatured);
     SWITCH2(LOC(@"HIDE_HEADER_LINKS_UNDER_PROFILE"), LOC(@"HIDE_HEADER_LINKS_UNDER_PROFILE_DESC"), kHideChannelHeaderLinks);
     SWITCH2(LOC(@"IPHONE_LAYOUT"), LOC(@"IPHONE_LAYOUT_DESC"), kiPhoneLayout);
     SWITCH2(LOC(@"NEW_MINIPLAYER_STYLE"), LOC(@"NEW_MINIPLAYER_STYLE_DESC"), kBigYTMiniPlayer);

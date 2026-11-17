@@ -182,9 +182,14 @@ static NSString *const kFixCasting = @"fixCasting_enabled";
 static NSString *const kNewSettingsUI = @"newSettingsUI_enabled";
 static NSString *const kFlex = @"flex_enabled";
 static NSString *const kGoogleSigninFix = @"googleSigninFix_enabled";
+static NSString *const kHideYouTubeFeatured = @"hideYouTubeFeatured_enabled";
 
 // Defined in uYouPlusVersionSpoofer.xm: turns the App Version Spoofer on for a fresh install (rules are in the comment there).
 void setDefaultVersionSpoofer(NSArray *allKeys);
+
+// Defined in uYouPlusForkDefaults.xm: applies this fork's default settings once per install (ad blocker on, Shorts / Create /
+// uYou tabs hidden, "YouTube featured" shelf hidden). Safe to call from any %ctor, it only does its work the first time.
+void UYTApplyForkDefaults(void);
 
 @interface YouModMigrationManager : NSObject
 + (instancetype)sharedManager;

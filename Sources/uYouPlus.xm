@@ -1874,6 +1874,8 @@ static NSMutableArray <YTIItemSectionRenderer *> *filteredShortsArray(NSArray <Y
 
 #pragma mark - [4] Constructor
 %ctor {
+    // First, so that the switches the groups below read already hold this fork's defaults (see uYouPlusForkDefaults.xm).
+    UYTApplyForkDefaults();
 
     %init;
     %init(gAlwaysOn);

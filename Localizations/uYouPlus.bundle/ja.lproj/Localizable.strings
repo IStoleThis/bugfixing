@@ -277,6 +277,8 @@
 "UI_INTERFACE_OPTIONS" = "UI インターフェースの設定";
 
 "HIDE_HOME_TAB" = "ホームタブを非表示";
+"HIDE_SHORTS_TAB" = "Hide Shorts Tab";
+"HIDE_CREATE_TAB" = "Hide Create Tab";
 
 "SHOW_NOTIFICATIONS_TAB" = "Enable Notifications Tab";
 "SHOW_NOTIFICATIONS_TAB_DESC" = "Makes the Notifications Tab appear back onto the Pivot Bar, experimental: Testing customization options.";
@@ -325,6 +327,8 @@
 "STICK_NAVIGATION_BAR_DESC" = "アプリ内をスクロールしてもナビゲーションバーが表示されたままにします。";
 "HIDE_COMMUNITY_POSTS" = "コミュニティ投稿を非表示";
 "HIDE_COMMUNITY_POSTS_DESC" = "コミュニティ投稿を非表示にします。アプリの再起動が必要です。";
+"HIDE_YOUTUBE_FEATURED" = "Hide YouTube Featured Shelf";
+"HIDE_YOUTUBE_FEATURED_DESC" = "Hides YouTube's own \"YouTube featured\" promo shelf (for example \"Your home for ...\") on the Home feed. Applies the next time the feed loads.";
 "HIDE_HEADER_LINKS_UNDER_PROFILE" = "プロフィール下のヘッダーリンクを非表示";
 "HIDE_HEADER_LINKS_UNDER_PROFILE_DESC" = "チャンネルプロフィールの下にあるヘッダーリンクを非表示にします。";
 "AUTO_HIDE_HOME_INDICATOR" = "自動でホームインジケーターを非表示";

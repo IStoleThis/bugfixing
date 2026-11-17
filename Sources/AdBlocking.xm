@@ -288,6 +288,8 @@ static NSArray *filteredSectionEntries(NSArray *entries) {
 %end
 
 %ctor {
+    // The ad-block group is chosen here, once, from the switches, so the fork's defaults must be in place before this reads them.
+    UYTApplyForkDefaults();
     if (IS_ENABLED(kAdBlockWorkaroundLite)) {
         %init(uYouAdBlockingWorkaroundLite);
     }

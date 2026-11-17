@@ -277,6 +277,8 @@
 "UI_INTERFACE_OPTIONS" = "UI 선택사항";
 
 "HIDE_HOME_TAB" = "홈 탭 숨기기";
+"HIDE_SHORTS_TAB" = "Hide Shorts Tab";
+"HIDE_CREATE_TAB" = "Hide Create Tab";
 
 "SHOW_NOTIFICATIONS_TAB" = "Enable Notifications Tab";
 "SHOW_NOTIFICATIONS_TAB_DESC" = "Makes the Notifications Tab appear back onto the Pivot Bar, experimental: Testing customization options.";
@@ -325,6 +327,8 @@
 "STICK_NAVIGATION_BAR_DESC" = "앱에서 스크롤할 때 네비게이션 막대가 고정된 위치에 있도록 만듭니다.";
 "HIDE_COMMUNITY_POSTS" = "커뮤니티 게시글 숨기기";
 "HIDE_COMMUNITY_POSTS_DESC" = "커뮤니티의 게시글을 숨깁니다. 앱을 다시 시작해야 합니다.";
+"HIDE_YOUTUBE_FEATURED" = "Hide YouTube Featured Shelf";
+"HIDE_YOUTUBE_FEATURED_DESC" = "Hides YouTube's own \"YouTube featured\" promo shelf (for example \"Your home for ...\") on the Home feed. Applies the next time the feed loads.";
 "HIDE_HEADER_LINKS_UNDER_PROFILE" = "채널 프로필 제목 링크 숨기기";
 "HIDE_HEADER_LINKS_UNDER_PROFILE_DESC" = "채널 프로필의 제목 링크를 숨깁니다.";
 "AUTO_HIDE_HOME_INDICATOR" = "홈 표시기 자동 숨김";

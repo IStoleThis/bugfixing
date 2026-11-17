@@ -277,6 +277,8 @@
 "UI_INTERFACE_OPTIONS" = "Kullanıcı Arayüzü Seçenekleri";
 
 "HIDE_HOME_TAB" = "Ana Sekmeyi Gizle";
+"HIDE_SHORTS_TAB" = "Hide Shorts Tab";
+"HIDE_CREATE_TAB" = "Hide Create Tab";
 
 "SHOW_NOTIFICATIONS_TAB" = "Enable Notifications Tab";
 "SHOW_NOTIFICATIONS_TAB_DESC" = "Makes the Notifications Tab appear back onto the Pivot Bar, experimental: Testing customization options.";
@@ -325,6 +327,8 @@
 "STICK_NAVIGATION_BAR_DESC" = "Uygulama içinde gezinirken gezinti çubuğunu sabitler.";
 "HIDE_COMMUNITY_POSTS" = "Topluluk Gönderilerini Gizle";
 "HIDE_COMMUNITY_POSTS_DESC" = "Topluluk Gönderilerini gizler. Uygulama yeniden başlatılması gereklidir.";
+"HIDE_YOUTUBE_FEATURED" = "Hide YouTube Featured Shelf";
+"HIDE_YOUTUBE_FEATURED_DESC" = "Hides YouTube's own \"YouTube featured\" promo shelf (for example \"Your home for ...\") on the Home feed. Applies the next time the feed loads.";
 "HIDE_HEADER_LINKS_UNDER_PROFILE" = "Kanal profili altındaki başlık bağlantılarını gizle";
 "HIDE_HEADER_LINKS_UNDER_PROFILE_DESC" = "Herhangi bir kanal profili altındaki başlık bağlantılarını gizler.";
 "AUTO_HIDE_HOME_INDICATOR" = "Ana Ekran Göstergesini Otomatik Gizle";
