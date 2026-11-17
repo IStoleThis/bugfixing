@@ -1,3 +1,31 @@
+> [!IMPORTANT]
+> **This is an unofficial bugfixing fork of [arichornlover/uYouEnhanced](https://github.com/arichornlover/uYouEnhanced).** It tries to fix bugs in uYouEnhanced, starting with casting to a TV. It is not affiliated with the upstream project, everything not listed under [What this fork changes](#what-this-fork-changes) is upstream's work, and fixes here are best effort.
+
+## Bugs this fork is trying to fix
+
+| Bug | Status |
+| --- | --- |
+| Casting to a TV or Chromecast says "Local Network access is required" even though the permission is on | **Partly addressed.** Fix Casting is on by default again, but it is only documented to work up to YouTube **20.10.4** ([YTweaks](https://github.com/fosterbarnes/YTweaks#supported-youtube-versions)), so build with 20.10.4 or older. On newer YouTube versions casting is still broken and under investigation. |
+
+## What this fork changes
+
+- **Fix Casting is on by default again.** The default had been dropped from the code, so new installs started with it off.
+- **Casting preflight.** The *Casting Preflight* workflow, and the summary of every build, lists which casting flags a YouTube version still contains. It is there to help find a fix for newer versions.
+- **AltStore / SideStore / Feather source.** Builds published from this fork can be installed with the buttons below.
+- **Casting FAQ** rewritten with the version limit and the known workarounds.
+
+## Install this fork
+
+<a href="https://intradeus.github.io/http-protocol-redirector?r=altstore://source?url=https://github.com/IStoleThis/bugfixing/releases/latest/download/altstore-source.json"><img alt="Add to AltStore" src="Assets/buttons/altstore_button.png" width="150"></a>
+&nbsp;
+<a href="https://intradeus.github.io/http-protocol-redirector?r=feather://source/https://github.com/IStoleThis/bugfixing/releases/latest/download/altstore-source.json"><img alt="Add to Feather" src="Assets/buttons/feather_button.png" width="150"></a>
+&nbsp;
+<a href="https://intradeus.github.io/http-protocol-redirector?r=sidestore://source?url=https://github.com/IStoleThis/bugfixing/releases/latest/download/altstore-source.json"><img alt="Add to SideStore" src="Assets/buttons/sidestore_button.png" width="150"></a>
+&nbsp;
+<a href="https://github.com/IStoleThis/bugfixing/releases/latest/download/altstore-source.json"><img alt="Direct source URL" src="Assets/buttons/url_button.png" width="150"></a>
+
+These builds are not signed for your device: AltStore and SideStore sign them with your Apple ID as they install them (with a free Apple ID the app has to be refreshed every 7 days), and Feather signs them with the certificate you imported. If a button says the source can't be loaded, no build has been published from this fork yet.
+
 ## Lightweight Alternative - YouMod
 
 <details>
@@ -334,10 +362,11 @@ Enable **Enable App Version Spoofer** in uYouEnhanced's settings, pick a newer Y
 Make sure you are on the [latest release](https://github.com/arichornlover/uYouEnhanced/releases/latest) and that your YouTube version matches the [version information](#download) table. Note that some **uYou** features do not work on newer YouTube versions (see the news note in the Download section).
 
 **Q: Where should I file a bug report?**
-On [this repo's issue tracker](https://github.com/arichornlover/uYouEnhanced/issues/) — including uYou-specific bugs. Please search the open issues first; many reports (sign-in, casting, update screen) are covered by the answers above.
+On the [upstream issue tracker](https://github.com/arichornlover/uYouEnhanced/issues/) — including uYou-specific bugs. Please search the open issues first; many reports (sign-in, casting, update screen) are covered by the answers above.
 
 ## Download
 
+- This fork's builds are installed with the AltStore / SideStore / Feather buttons in [Install this fork](#install-this-fork) at the top of this page. The links below belong to the upstream project.
 - The latest version of **uYouEnhanced** can be found under [Releases](https://github.com/arichornlover/uYouEnhanced/releases/latest).
 - **Compatibility:** Requires iOS/iPadOS 16.0 or later.
 - For AltStore user: 

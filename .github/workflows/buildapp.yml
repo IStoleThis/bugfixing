@@ -47,7 +47,12 @@ on:
         required: false
         type: boolean
       create_release:
-        description: "Create a draft release"
+        description: "Create a draft release (not needed when publishing to AltStore)"
+        default: true
+        required: false
+        type: boolean
+      publish_altstore:
+        description: "Publish to AltStore: public release + altstore-source.json (the repo must be public)"
         default: true
         required: false
         type: boolean
@@ -333,8 +338,24 @@ jobs:
           path: ${{ github.workspace }}/main/packages/${{ env.RENAMED_IPA || steps.strip_ipa.outputs.final_ipa }}
           if-no-files-found: error
 
+      # Writes altstore-source.json for this build. AltStore refuses to install an app
+      # whose version, hash or permissions differ from the source, so all of them are
+      # read from the finished IPA (see Scripts/altstore-source/make_altstore_source.py).
+      - name: Make AltStore source
+        if: ${{ inputs.publish_altstore }}
+        env:
+          FINAL_IPA: ${{ steps.strip_ipa.outputs.final_ipa }}
+          RELEASE_TAG: v${{ steps.prepare_youtube.outputs.youtube_version }}-${{ inputs.uyou_version }}-(${{ github.run_number }})
+        run: |
+          set -euo pipefail
+          python3 -I main/Scripts/altstore-source/make_altstore_source.py \
+            "main/packages/${RENAMED_IPA:-$FINAL_IPA}" \
+            --tag "$RELEASE_TAG" \
+            --notes "$(git -C main log -1 --pretty=%s)" \
+            --out altstore-source.json
+
       - name: Create Release
-        if: ${{ inputs.create_release }}
+        if: ${{ inputs.create_release || inputs.publish_altstore }}
         id: create_release
         uses: softprops/action-gh-release@v3
         env:
@@ -344,5 +365,23 @@ jobs:
         with:
           tag_name: v${{ env.YOUTUBE_VERSION }}-${{ env.UYOU_VERSION }}-(${{ github.run_number }})
           name: v${{ env.YOUTUBE_VERSION }}-${{ env.UYOU_VERSION }}-(${{ github.run_number }})
-          files: main/packages/*.ipa
-          draft: true
+          files: |
+            main/packages/*.ipa
+            ${{ inputs.publish_altstore && 'altstore-source.json' || '' }}
+          # Publishing to AltStore needs a public release that is marked "latest",
+          # because the source URL is .../releases/latest/download/altstore-source.json.
+          draft: ${{ !inputs.publish_altstore }}
+          make_latest: ${{ inputs.publish_altstore }}
+
+      - name: Show AltStore source URL
+        if: ${{ inputs.publish_altstore }}
+        run: |
+          URL="https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/altstore-source.json"
+          echo "AltStore source: $URL"
+          {
+            echo "### AltStore source"
+            echo
+            echo "Add this URL in AltStore, SideStore or Feather to install the latest published build:"
+            echo
+            printf '`%s`\n' "$URL"
+          } >> "$GITHUB_STEP_SUMMARY"

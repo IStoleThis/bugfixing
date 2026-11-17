@@ -68,6 +68,20 @@ and the networking entitlements of the original signature.
 |---|---|
 | `casting_preflight.py` | Static Mach-O scan of a decrypted `YouTube.app` (stdlib only): `python3 Scripts/casting-preflight/casting_preflight.py Payload/YouTube.app [--version 20.44.2]` |
 
+### 📲 AltStore source — `Scripts/altstore-source/`
+
+When the build workflow is run with **Publish to AltStore** ticked, it makes a public release
+and attaches `altstore-source.json` next to the IPA. The source is always read from the
+finished IPA, because AltStore refuses to install an app whose version, SHA-256, entitlements
+or privacy permissions differ from what the source declares. The README's buttons point at
+`https://github.com/<owner>/<repo>/releases/latest/download/altstore-source.json`.
+
+| Script | Purpose |
+|---|---|
+| `make_altstore_source.py` | Writes `altstore-source.json` for an IPA (stdlib only): `python3 Scripts/altstore-source/make_altstore_source.py App.ipa --repo OWNER/REPO --tag TAG` |
+
+Editable names, description, icon and tint colour are constants at the top of the script.
+
 ## Typical crash debugging flow
 
 1. Crash happens → pull the `.ips` from the device
