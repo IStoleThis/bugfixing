@@ -6,6 +6,8 @@
 #import <stdio.h>
 #import <sys/types.h>
 #import <pthread.h>
+#import <fcntl.h>
+#import <errno.h>
 #import "UYTLog.h"
 
 typedef NS_ENUM(NSInteger, UYTKind) {
@@ -43,6 +45,17 @@ static NSString *UYTLogFile;
 static NSFileHandle *UYTLogHandle;
 static NSString *UYTSessionStart;
 static int UYTOrigStderr = -1;
+// The log file is written on its own queue, in batches, never while the log's lock is held: a slow disk must not make the thread
+// that logs (often the main thread) wait. Only that queue touches UYTLogHandle, UYTFileBuffer and UYTFlushPending.
+static dispatch_queue_t UYTFileQueue;
+static NSMutableData *UYTFileBuffer;
+static BOOL UYTFlushPending;
+static int UYTFilePendingLines = 0;
+static const int UYTFilePendingMax = 4000;
+static const NSUInteger UYTFileBufferFlushBytes = 16 * 1024;
+static const int64_t UYTFileFlushDelayMs = 500;
+static char UYTFileQueueKey;
+static NSUncaughtExceptionHandler *UYTPreviousHandler;
 static const NSUInteger UYTLogRingCap = 2000;
 static const NSUInteger UYTHostCaptureCap = 500;
 static const NSUInteger UYTHostSignalCap = 220;
@@ -95,8 +108,13 @@ static void UYTRotateLogFile(void) {
     } @catch (NSException *e) {}
 }
 
-static void UYTFileAppend(NSString *line) {
-    if (!UYTLogFile.length) return;
+// Writes what has been collected. Runs on UYTFileQueue only.
+static void UYTFileFlush(void) {
+    if (!UYTFileBuffer.length) return;
+    if (!UYTLogFile.length) {
+        [UYTFileBuffer setLength:0];
+        return;
+    }
     if (!UYTLogHandle) {
         @try {
             if (![[NSFileManager defaultManager] fileExistsAtPath:UYTLogFile]) {
@@ -108,13 +126,51 @@ static void UYTFileAppend(NSString *line) {
             UYTLogHandle = nil;
         }
     }
-    if (!UYTLogHandle) return;
-    @try {
-        [UYTLogHandle writeData:[[line stringByAppendingString:@"\n"] dataUsingEncoding:NSUTF8StringEncoding]];
-    } @catch (NSException *e) {
-        @try { [UYTLogHandle closeFile]; } @catch (NSException *e2) {}
-        UYTLogHandle = nil;
+    if (UYTLogHandle) {
+        @try {
+            [UYTLogHandle writeData:UYTFileBuffer];
+        } @catch (NSException *e) {
+            @try { [UYTLogHandle closeFile]; } @catch (NSException *e2) {}
+            UYTLogHandle = nil;
+        }
     }
+    [UYTFileBuffer setLength:0];
+}
+
+// Write everything that is waiting, and wait for it. For the moments when the process may be about to end.
+static void UYTFileFlushNow(void) {
+    if (!UYTFileQueue) return;
+    if (dispatch_get_specific(&UYTFileQueueKey)) {
+        UYTFileFlush();
+    } else {
+        dispatch_sync(UYTFileQueue, ^{ UYTFileFlush(); });
+    }
+}
+
+static void UYTFileAppend(NSString *line) {
+    if (!UYTFileQueue || !UYTLogFile.length) return;
+    // If the disk cannot keep up, the ring still has the line; only the file misses it.
+    if (__atomic_add_fetch(&UYTFilePendingLines, 1, __ATOMIC_RELAXED) > UYTFilePendingMax) {
+        __atomic_sub_fetch(&UYTFilePendingLines, 1, __ATOMIC_RELAXED);
+        return;
+    }
+    NSString *text = [line stringByAppendingString:@"\n"];
+    dispatch_async(UYTFileQueue, ^{
+        __atomic_sub_fetch(&UYTFilePendingLines, 1, __ATOMIC_RELAXED);
+        NSData *data = [text dataUsingEncoding:NSUTF8StringEncoding];
+        if (data) [UYTFileBuffer appendData:data];
+        if (UYTFileBuffer.length >= UYTFileBufferFlushBytes) {
+            UYTFileFlush();
+            return;
+        }
+        if (!UYTFlushPending) {
+            UYTFlushPending = YES;
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, UYTFileFlushDelayMs * NSEC_PER_MSEC), UYTFileQueue, ^{
+                UYTFlushPending = NO;
+                UYTFileFlush();
+            });
+        }
+    });
 }
 
 static void UYTWriteLine(NSString *tag, NSString *stamp, NSString *text) {
@@ -124,8 +180,8 @@ static void UYTWriteLine(NSString *tag, NSString *stamp, NSString *text) {
             [UYTLogRing removeObjectsInRange:NSMakeRange(0, UYTLogRing.count - UYTLogRingCap + 1)];
         }
         [UYTLogRing addObject:line];
-        UYTFileAppend(line);
     }
+    UYTFileAppend(line);
 }
 
 static void UYTWriteMessage(NSString *tag, NSString *message) {
@@ -173,6 +229,8 @@ static NSString *UYTStripHostPrefix(NSString *raw) {
     });
     NSString *s = raw ?: @"";
     while (s.length) {
+        unichar first = [s characterAtIndex:0];
+        if (first < '0' || first > '9') break; // the prefix is a date, so only a line that starts with a digit can have one
         NSTextCheckingResult *m = [rx firstMatchInString:s options:0 range:NSMakeRange(0, s.length)];
         if (!m || !m.range.length) break;
         s = [s substringFromIndex:m.range.length];
@@ -195,23 +253,41 @@ static void UYTHandleUncaught(NSException *exception) {
             exception.name ?: @"?", exception.reason ?: @"?",
             [exception.callStackSymbols componentsJoinedByString:@"\n"]]);
     }
+    UYTFileFlushNow(); // the app ends right after this
+    if (UYTPreviousHandler) UYTPreviousHandler(exception);
+}
+
+// Turns one line of the host's stderr output into a log line.
+static void UYTCaptureBytes(const char *bytes, NSUInteger length) {
+    NSString *line = [[NSString alloc] initWithBytes:bytes length:length encoding:NSUTF8StringEncoding];
+    if (!line) line = [[NSString alloc] initWithBytes:bytes length:length encoding:NSISOLatin1StringEncoding];
+    if (line.length) UYTDebugCaptureLine(line);
 }
 
 static void *UYTStderrReaderMain(void *ctx) {
-    @autoreleasepool {
-        int fd = (int)(intptr_t)ctx;
-        char buf[2048];
-        ssize_t n;
-        NSMutableString *acc = [NSMutableString string];
-        while ((n = read(fd, buf, sizeof(buf))) > 0) {
-            NSString *chunk = [[NSString alloc] initWithBytes:buf length:(NSUInteger)n encoding:NSUTF8StringEncoding];
-            if (chunk) [acc appendString:chunk];
-            NSRange eol;
-            while ((eol = [acc rangeOfString:@"\n"]).location != NSNotFound) {
-                NSString *line = [acc substringToIndex:eol.location];
-                [acc deleteCharactersInRange:NSMakeRange(0, eol.location + 1)];
-                if ([line hasSuffix:@"\r"]) line = [line substringToIndex:line.length - 1];
-                UYTDebugCaptureLine(line);
+    int fd = (int)(intptr_t)ctx;
+    char buf[8192];
+    // Bytes, not text, are collected, so a character that arrives in two reads is not lost, and a line is cut at its newline.
+    NSMutableData *acc = [NSMutableData data];
+    for (;;) {
+        ssize_t n = read(fd, buf, sizeof(buf));
+        if (n < 0 && errno == EINTR) continue;
+        if (n <= 0) break;
+        @autoreleasepool {
+            [acc appendBytes:buf length:(NSUInteger)n];
+            const char *base = (const char *)acc.bytes;
+            NSUInteger length = acc.length, start = 0;
+            for (NSUInteger i = 0; i < length; i++) {
+                if (base[i] != '\n') continue;
+                NSUInteger end = i;
+                if (end > start && base[end - 1] == '\r') end--;
+                if (end > start) UYTCaptureBytes(base + start, end - start);
+                start = i + 1;
+            }
+            if (start > 0) [acc replaceBytesInRange:NSMakeRange(0, start) withBytes:NULL length:0];
+            if (acc.length > 64 * 1024) { // no newline in a long time: log what there is and start over
+                UYTCaptureBytes((const char *)acc.bytes, 4096);
+                [acc setLength:0];
             }
         }
     }
@@ -225,6 +301,15 @@ void UYTLogInstall(void) {
         UYTLogRing = [NSMutableArray array];
         UYTLogFile = [UYTDocDir() stringByAppendingPathComponent:@"uYouEnhanced-Debug.log"];
         UYTRotateLogFile();
+        UYTFileBuffer = [NSMutableData data];
+        dispatch_queue_attr_t attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_UTILITY, 0);
+        UYTFileQueue = dispatch_queue_create("uYouEnhanced.debuglog", attr);
+        dispatch_queue_set_specific(UYTFileQueue, &UYTFileQueueKey, &UYTFileQueueKey, NULL);
+        for (NSNotificationName name in @[UIApplicationWillResignActiveNotification, UIApplicationDidEnterBackgroundNotification]) {
+            [[NSNotificationCenter defaultCenter] addObserverForName:name object:nil queue:nil usingBlock:^(NSNotification *note) {
+                dispatch_async(UYTFileQueue, ^{ UYTFileFlush(); });
+            }];
+        }
         UYTSessionStart = UYTNowStamp();
 
         NSDateFormatter *df = [NSDateFormatter new];
@@ -241,6 +326,10 @@ void UYTLogInstall(void) {
             int orig = dup(STDERR_FILENO);
             if (orig >= 0) {
                 UYTOrigStderr = orig;
+                // The write end never blocks. If the reader ever falls behind, a log line is dropped; what would otherwise
+                // happen is that whatever wrote to stderr (the main thread, an NSLog) waits for the reader.
+                int flags = fcntl(fds[1], F_GETFL, 0);
+                if (flags >= 0) fcntl(fds[1], F_SETFL, flags | O_NONBLOCK);
                 dup2(fds[1], STDERR_FILENO);
                 close(fds[1]);
                 pthread_t th;
@@ -255,6 +344,7 @@ void UYTLogInstall(void) {
             }
         }
 
+        UYTPreviousHandler = NSGetUncaughtExceptionHandler();
         NSSetUncaughtExceptionHandler(&UYTHandleUncaught);
     });
 }
@@ -555,9 +645,11 @@ NSString *UYTDebugFullReport(void) {
 #endif
         [s appendFormat:@"  device   : %@\n", UIDevice.currentDevice.model ?: @"?"];
         [s appendFormat:@"  iOS      : %@\n", UIDevice.currentDevice.systemVersion ?: @"?"];
-        [s appendFormat:@"  bundle   : %@ v%@\n",
+        id buildNumber = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"UYTBuildNumber"];
+        [s appendFormat:@"  bundle   : %@ v%@%@\n",
             [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleIdentifier"] ?: @"?",
-            [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: @"?"];
+            [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: @"?",
+            buildNumber ? [NSString stringWithFormat:@" (bugfix build %@)", buildNumber] : @""];
         NSDateFormatter *df = [NSDateFormatter new];
         df.dateFormat = @"yyyy-MM-dd HH:mm:ss";
         [s appendFormat:@"  exported : %@\n", [df stringFromDate:[NSDate date]]];

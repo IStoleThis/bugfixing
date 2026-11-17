@@ -7,6 +7,7 @@ differ from what the source says, so everything that can be read from the IPA is
 read from the IPA instead of being typed in:
 
   * bundle ID, version, build number, minimum iOS   <- Info.plist of the app
+  * the build's own version number                  <- UYTStockShortVersion / UYTBuildNumber in that Info.plist
   * privacy permissions                             <- *UsageDescription keys in the Info.plists
   * entitlements                                    <- code signature of the app and its extensions
   * size and SHA-256                                <- the IPA file itself
@@ -14,6 +15,12 @@ read from the IPA instead of being typed in:
 The output is attached to the GitHub release next to the IPA, so
 https://github.com/<owner>/<repo>/releases/latest/download/altstore-source.json
 always describes the newest published build.
+
+AltStore offers an update only when the version in the source differs from the installed one. Every build of this fork has the
+same YouTube version, so the workflow stamps its run number onto CFBundleShortVersionString ("21.38.2" becomes "21.38.2.5") and
+keeps the real value in UYTStockShortVersion (see "Stamp build number" in buildapp.yml). The version written here is the stamped
+one, because AltStore refuses to install an IPA whose version differs from the source's; the name shown to people is the real
+YouTube version plus the build number.
 
 Pure Python 3 standard library (runs on the GitHub macOS runner as it is).
 
@@ -182,6 +189,16 @@ def main():
     bundle_id = str(info["CFBundleIdentifier"])
     version = str(info["CFBundleShortVersionString"])
     build = str(info.get("CFBundleVersion") or version)
+    # The version YouTube reports and the build's own number, when the workflow stamped them (see the top of this file).
+    stock = str(info.get("UYTStockShortVersion") or "").strip()
+    number = str(info.get("UYTBuildNumber") or "").strip() or (args.run_number or "")
+    if stock:
+        if not re.fullmatch(r"\d+(\.\d+)*", stock):
+            fail("UYTStockShortVersion %r is not a version number" % stock)
+        if version == stock:
+            warn("the app version %s was not stamped with a build number; AltStore cannot tell this build from the one before" % version)
+    else:
+        stock = version
     min_os = str(info.get("MinimumOSVersion") or FALLBACK_MIN_OS)
 
     size = os.path.getsize(args.ipa)
@@ -199,8 +216,8 @@ def main():
     website = "https://github.com/%s" % args.repo
 
     now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    marketing = "%s (bugfix build %s)" % (version, args.run_number) if args.run_number else version
-    notes = "YouTube %s with uYouEnhanced bugfixes." % version
+    marketing = "%s (bugfix build %s)" % (stock, number) if number else stock
+    notes = "YouTube %s with uYouEnhanced bugfixes." % stock
     if args.notes.strip():
         notes += " Latest change: %s" % args.notes.strip()
 
@@ -255,6 +272,7 @@ def main():
 
     print("AltStore source written to %s" % args.out)
     print("  app:          %s  %s (build %s), iOS %s+" % (bundle_id, version, build, min_os))
+    print("  shown as:     %s" % marketing)
     print("  ipa:          %s, %d bytes" % (asset, size))
     print("  sha256:       %s" % sha256)
     print("  download:     %s" % download_url)

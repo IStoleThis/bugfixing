@@ -31,6 +31,26 @@ static NSString *accessGroupID() {
 
 # pragma mark - YouTube patches
 
+// The build stamps a build number onto CFBundleShortVersionString ("21.38.2" becomes "21.38.2.5") so that AltStore sees every
+// build as a new version, and keeps the real value in UYTStockShortVersion. YouTube and the libraries in it read the version
+// through NSBundle, so they are given the real one back: the stamp is for AltStore only.
+static NSString *UYTStockShortVersion(id value) {
+    return ([value isKindOfClass:[NSString class]] && [(NSString *)value length]) ? (NSString *)value : nil;
+}
+
+// The main bundle's Info.plist as YouTube should see it. A fresh mutable copy on every call, as this hook has always returned
+// (a caller is free to change what it gets back without affecting anyone else).
+static NSDictionary *UYTPatchedMainBundleInfo(NSDictionary *original) {
+    if (!original) return original;
+    NSMutableDictionary *info = [original mutableCopy];
+    if (info[@"CFBundleIdentifier"]) info[@"CFBundleIdentifier"] = YT_BUNDLE_ID;
+    if (info[@"CFBundleDisplayName"]) info[@"CFBundleDisplayName"] = YT_NAME;
+    if (info[@"CFBundleName"]) info[@"CFBundleName"] = YT_NAME;
+    NSString *stock = UYTStockShortVersion(info[@"UYTStockShortVersion"]);
+    if (stock && info[@"CFBundleShortVersionString"]) info[@"CFBundleShortVersionString"] = stock;
+    return info;
+}
+
 %group gPatches
 
 %hook NSBundle
@@ -49,12 +69,8 @@ static NSString *accessGroupID() {
 - (NSDictionary *)infoDictionary {
     NSDictionary *dict = %orig;
     if (![self isEqual:NSBundle.mainBundle])
-        return %orig;
-    NSMutableDictionary *info = [dict mutableCopy];
-    if (info[@"CFBundleIdentifier"]) info[@"CFBundleIdentifier"] = YT_BUNDLE_ID;
-    if (info[@"CFBundleDisplayName"]) info[@"CFBundleDisplayName"] = YT_NAME;
-    if (info[@"CFBundleName"]) info[@"CFBundleName"] = YT_NAME;
-    return info;
+        return dict;
+    return UYTPatchedMainBundleInfo(dict);
 }
 - (id)objectForInfoDictionaryKey:(NSString *)key {
     if (![self isEqual:NSBundle.mainBundle])
@@ -63,6 +79,11 @@ static NSString *accessGroupID() {
         return YT_BUNDLE_ID;
     if ([key isEqualToString:@"CFBundleDisplayName"] || [key isEqualToString:@"CFBundleName"])
         return YT_NAME;
+    if ([key isEqualToString:@"CFBundleShortVersionString"]) {
+        // The build adds a build number to the version for AltStore; YouTube gets the version without it.
+        NSString *stock = UYTStockShortVersion(%orig(@"UYTStockShortVersion"));
+        if (stock) return stock;
+    }
     return %orig;
 }
 %end

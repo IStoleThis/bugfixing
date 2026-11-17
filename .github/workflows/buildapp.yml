@@ -329,6 +329,52 @@ jobs:
           cd .. && rm -rf iconwork
           echo "Alternate icons registered into $(basename "$IPA")"
 
+      # AltStore (and SideStore and Feather) offer an update only when the version in the source differs from the installed one. Every
+      # build of this fork has the same YouTube version, so the build's run number is added to the version the sideloader sees
+      # ("21.38.2" becomes "21.38.2.5"). The real version stays in UYTStockShortVersion and YouTube is given it back (see the
+      # NSBundle hooks in Sources/uYouPlusPatches.xm). CFBundleVersion is not touched: YouTube reports it as its own version.
+      # Scripts/altstore-source/make_altstore_source.py reads the stamped version from the finished IPA.
+      - name: Stamp build number into the app version
+        run: |
+          set -euo pipefail
+          IPA="main/packages/${{ steps.strip_ipa.outputs.final_ipa }}"
+          NUMBER="${{ github.run_number }}"
+          PB=/usr/libexec/PlistBuddy
+          PLIST="Payload/YouTube.app/Info.plist"
+          rm -rf stampwork && mkdir stampwork && cd stampwork
+          unzip -q "../$IPA" "$PLIST"
+          # An IPA that was stamped before keeps its real version in UYTStockShortVersion: start from that, never stamp a stamp.
+          STOCK="$($PB -c "Print :UYTStockShortVersion" "$PLIST" 2>/dev/null || $PB -c "Print :CFBundleShortVersionString" "$PLIST")"
+          BUILD_BEFORE="$($PB -c "Print :CFBundleVersion" "$PLIST")"
+          case "$STOCK" in
+            ''|*[!0-9.]*|.*|*.|*..*) echo "::error::unexpected YouTube version '$STOCK', not stamping it"; exit 1 ;;
+          esac
+          case "$NUMBER" in
+            ''|*[!0-9]*) echo "::error::unexpected run number '$NUMBER'"; exit 1 ;;
+          esac
+          STAMPED="$STOCK.$NUMBER"
+          $PB -c "Delete :UYTStockShortVersion" "$PLIST" 2>/dev/null || true
+          $PB -c "Delete :UYTBuildNumber" "$PLIST" 2>/dev/null || true
+          $PB -c "Add :UYTStockShortVersion string $STOCK" "$PLIST"
+          $PB -c "Add :UYTBuildNumber string $NUMBER" "$PLIST"
+          $PB -c "Set :CFBundleShortVersionString $STAMPED" "$PLIST"
+          zip -q "../$IPA" "$PLIST"
+          cd .. && rm -rf stampwork
+          # Read the finished IPA back: the version for the sideloader must be the stamped one, the build number must be as it was.
+          rm -rf stampcheck && mkdir stampcheck && cd stampcheck
+          unzip -q "../$IPA" "$PLIST"
+          GOT_SHORT="$($PB -c "Print :CFBundleShortVersionString" "$PLIST")"
+          GOT_STOCK="$($PB -c "Print :UYTStockShortVersion" "$PLIST")"
+          GOT_NUMBER="$($PB -c "Print :UYTBuildNumber" "$PLIST")"
+          GOT_BUILD="$($PB -c "Print :CFBundleVersion" "$PLIST")"
+          cd .. && rm -rf stampcheck
+          if [ "$GOT_SHORT" != "$STAMPED" ] || [ "$GOT_STOCK" != "$STOCK" ] || [ "$GOT_NUMBER" != "$NUMBER" ] || [ "$GOT_BUILD" != "$BUILD_BEFORE" ]; then
+            echo "::error::the stamp did not end up in the IPA (version '$GOT_SHORT', stock '$GOT_STOCK', number '$GOT_NUMBER', build '$GOT_BUILD')"
+            exit 1
+          fi
+          echo "Version for AltStore: $STAMPED (YouTube sees $STOCK, CFBundleVersion $BUILD_BEFORE unchanged)"
+          echo "STAMPED_VERSION=$STAMPED" >> "$GITHUB_ENV"
+
       - name: Rebrand IPA Filename (3.0.4 -> 3.0.5)
         run: |
           set -euo pipefail

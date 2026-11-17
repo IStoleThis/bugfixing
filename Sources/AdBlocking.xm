@@ -1,6 +1,7 @@
 
 #import "uYouPlus.h"
 #import "UYTLog.h"
+#import "UYTFeedText.h"
 
 %group uYouAdBlockingWorkaroundLite
 %hook YTGlobalConfig
@@ -144,43 +145,17 @@ static BOOL isProductList(YTICommand *command) {
     %orig;
 }
 %end
-NSString *getAdString(NSString *description) {
-    for (NSString *str in @[
-        @"brand_promo",
-        @"brand_video_shelf",
-        @"carousel_footered_layout",
-        @"carousel_headered_layout",
-        @"eml.expandable_metadata",
-        @"feed_ad_metadata",
-        @"full_width_portrait_image_layout",
-        @"full_width_square_image_layout",
-        @"grid_ads_image_layout",
-        @"landscape_image_wide_button_layout",
-        @"post_shelf",
-        @"product_carousel",
-        @"product_engagement_panel",
-        @"product_item",
-        @"shopping_carousel",
-        @"shopping_item_card_list",
-        @"statement_banner",
-        @"square_image_layout",
-        @"text_image_button_layout",
-        @"text_search_ad",
-        @"video_display_full_layout",
-        @"video_display_full_buttoned_layout"
-    ])
-        if ([description containsString:str]) return str;
-    return nil;
-}
+// Whether a feed renderer is an ad (or a shopping unit). The renderer's text is checked for the layout names in kUYTAdNames
+// (UYTFeedText.h), which searches the serialized renderer and remembers the answer per renderer; the old way, -description,
+// formats every byte on its own and took a noticeable part of a second per feed page.
 static BOOL isAdRenderer(YTIElementRenderer *elementRenderer, int kind) {
+    if (!elementRenderer) return NO;
     if ([elementRenderer respondsToSelector:@selector(hasCompatibilityOptions)] && elementRenderer.hasCompatibilityOptions && elementRenderer.compatibilityOptions.hasAdLoggingData) {
         UYTDebugInfo(@"YTX adLogging kind=%d renderer=%@", kind, NSStringFromClass([elementRenderer class]));
         return YES;
     }
-    NSString *description = [elementRenderer description];
-    NSString *adString = getAdString(description);
-    if (adString) {
-        UYTDebugInfo(@"YTX getAdString kind=%d match=%lu chars renderer=%@", kind, (unsigned long)adString.length, NSStringFromClass([elementRenderer class]));
+    if (UYTFeedHas(elementRenderer, UYTFeedFlagAd)) {
+        UYTDebugInfo(@"YTX ad layout name kind=%d renderer=%@", kind, NSStringFromClass([elementRenderer class]));
         return YES;
     }
     return NO;

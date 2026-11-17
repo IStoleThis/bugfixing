@@ -30,8 +30,9 @@ static NSString *UYTAppVersion(void) {
     static NSString *cached = nil;
     static dispatch_once_t once;
     dispatch_once(&once, ^{
-        NSString *v = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
-        if (!v.length) v = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"];
+        // CFBundleVersion first: it is the version YouTube itself reports (+[YTVersionUtils appVersion]) and the build never changes it.
+        NSString *v = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"];
+        if (!v.length) v = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
         cached = v.length ? v : UYTFallbackAppVersion;
     });
     return cached;

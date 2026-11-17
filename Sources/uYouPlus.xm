@@ -1,5 +1,6 @@
 #import "uYouPlus.h"
 #import "UYTLog.h"
+#import "UYTFeedText.h"
 #import "uYouPlusPatches.h"
 
 #pragma mark - Localization Bundle
@@ -1399,6 +1400,8 @@ static BOOL YouSliderIsEnabled(void) {
 - (BOOL)shouldEnablePlayerBarOnlyOnPause { return NO; }
 %end
 
+// The Shorts filter looks at the text inside the renderers through UYTFeedText.h (a search of the serialized renderer, remembered
+// per renderer) instead of -description, which formats every byte on its own and is slow.
 static NSMutableArray <YTIItemSectionRenderer *> *filteredShortsArray(NSArray <YTIItemSectionRenderer *> *array) {
     if (![[NSUserDefaults standardUserDefaults] boolForKey:@"hideShortsCells"] || !array) {
         return [array mutableCopy];
@@ -1411,21 +1414,18 @@ static NSMutableArray <YTIItemSectionRenderer *> *filteredShortsArray(NSArray <Y
             NSMutableArray <YTIHorizontalListSupportedRenderers *> *itemsArray = horizontalListRenderer.itemsArray;
             NSIndexSet *removeItemsArrayIndexes = [itemsArray indexesOfObjectsPassingTest:^BOOL(YTIHorizontalListSupportedRenderers *horizontalListSupportedRenderers, NSUInteger idx2, BOOL *stop2) {
                 YTIElementRenderer *elementRenderer = horizontalListSupportedRenderers.elementRenderer;
-                NSString *description = [elementRenderer description];
-                BOOL hasShorts = [description containsString:@"shorts_video_cell"] || [description containsString:@"shorts_shelf"];
+                BOOL hasShorts = UYTFeedHas(elementRenderer, UYTFeedFlagShortsShelf | UYTFeedFlagShortsCell);
                 if (hasShorts) *stop2 = YES;
                 return hasShorts;
             }];
             return removeItemsArrayIndexes.count > 0;
         }
         if ([sectionRenderer isKindOfClass:%c(YTIItemSectionRenderer)]) {
-            NSString *description = [sectionRenderer description];
-            if ([description containsString:@"shorts_shelf.eml"] || [description containsString:@"shorts_shelf"])
+            if (UYTFeedHas(sectionRenderer, UYTFeedFlagShortsShelf))
                 return YES;
             NSMutableArray <YTIItemSectionSupportedRenderers *> *contentsArray = sectionRenderer.contentsArray;
             for (YTIItemSectionSupportedRenderers *supported in contentsArray) {
-                NSString *elDesc = [supported.elementRenderer description];
-                if ([elDesc containsString:@"shorts_shelf"] || [elDesc containsString:@"shorts_video_cell"]) {
+                if (UYTFeedHas(supported.elementRenderer, UYTFeedFlagShortsShelf | UYTFeedFlagShortsCell)) {
                     return YES;
                 }
             }

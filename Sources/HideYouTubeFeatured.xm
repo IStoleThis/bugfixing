@@ -4,103 +4,86 @@
 // ad-block filters in AdBlocking.xm look for, so those leave it in place. It gets its own switch (kHideYouTubeFeatured, on
 // by default, see uYouPlusForkDefaults.xm).
 //
-// How it works: like the "Hide Shorts cells" filter in uYouPlus.xm and the ad-block filters, it looks at the text form
-// (-description) of the feed's section renderers and drops the ones that match, while the sections are being added to the
-// feed. The shelf is gone before anything is drawn, so no gap is left. Two places are covered, the arrays of sections that
-// the feed controller receives (first load, continuation, refresh) and the entries of an array section. The switch is read each
-// time, so it takes effect on the next feed load without a restart.
+// How it works: like the "Hide Shorts cells" filter in uYouPlus.xm and the ad-block filters, it looks at the text inside the
+// feed's section renderers and drops the ones that match, while the sections are being added to the feed. The shelf is gone
+// before anything is drawn, so no gap is left. Two places are covered, the arrays of sections that the feed controller receives
+// (first load, continuation, refresh) and the entries of an array section. The switch is read each time, so it takes effect on
+// the next feed load without a restart. The text is checked through UYTFeedText.h, which searches the serialized renderer
+// instead of formatting it as text (that is slow) and remembers the answer per renderer.
 //
 // What is not known: the exact text that the shelf's renderer contains has not been seen on a device. The label shown on
 // screen ("YouTube featured") is what is matched, plus identifier-style spellings of it. If the shelf is still there after
-// a feed refresh, the debug log has what is needed to fix the match:
-//   [UYT-I] HideFeatured candidate ...  a section that looks like a promo and was kept, with the identifiers found in it
-//   [UYT-I] HideFeatured: the label is on screen ...  the shelf was drawn; the views it sits in are listed
+// a feed refresh, the debug log has what is needed to fix the match, a few lines at most per launch:
+//   [UYT-I] HideFeatured candidate kept ...  a section that looks like a promo and was kept, with the text around the hint
 #import "uYouPlus.h"
 #import "UYTLog.h"
+#import "UYTFeedText.h"
 
-static const NSUInteger kFeaturedMaxChars = 12000;
+// Debug lines about sections that look like a promo but were kept: this many per launch, then the check stops.
+static const int kFeaturedCandidateLogMax = 6;
+static int sFeaturedCandidateLogs = 0;
 
-static NSArray<NSString *> *UYTFeaturedNeedles(void) {
-    static NSArray<NSString *> *needles;
-    static dispatch_once_t once;
-    dispatch_once(&once, ^{
-        needles = @[@"YouTube featured", @"youtube_featured", @"yt_featured"];
-    });
-    return needles;
-}
-
-// Text form of a feed section (or of one entry of an array section), cut to a sane length. Nil for anything that is not
-// a kind of renderer the shelf can be, and for item sections with many entries, which are lists of videos.
-static NSString *UYTSectionText(id section) {
+// The object whose text is checked: nil for anything that is not a kind of renderer the shelf can be, and for item sections with
+// many entries, which are lists of videos. The element renderer is what the ad filters look at too, so the answer is shared.
+static id UYTFeaturedTarget(id section) {
     if (!section) return nil;
-    NSString *text = nil;
     @try {
         if ([section isKindOfClass:%c(YTIItemSectionRenderer)]) {
-            if (((YTIItemSectionRenderer *)section).contentsArray.count > 3) return nil;
-            text = [section description];
-        } else if ([section isKindOfClass:%c(YTIShelfRenderer)]) {
-            text = [section description];
-        } else if ([section isKindOfClass:%c(YTIItemSectionSupportedRenderers)]) {
-            text = [[(YTIItemSectionSupportedRenderers *)section elementRenderer] description];
-        } else if ([section isKindOfClass:%c(YTIElementRenderer)]) {
-            text = [section description];
+            return ((YTIItemSectionRenderer *)section).contentsArray.count > 3 ? nil : section;
         }
+        if ([section isKindOfClass:%c(YTIShelfRenderer)]) return section;
+        if ([section isKindOfClass:%c(YTIItemSectionSupportedRenderers)]) return [(YTIItemSectionSupportedRenderers *)section elementRenderer];
+        if ([section isKindOfClass:%c(YTIElementRenderer)]) return section;
     } @catch (id exception) {
         return nil;
     }
-    if (text.length > kFeaturedMaxChars) text = [text substringToIndex:kFeaturedMaxChars];
-    return text;
+    return nil;
 }
 
-// Identifier-style names found in a renderer's text ("statement_banner.eml", "brand_promo", ...), for the debug log only.
-static NSString *UYTIdentifierTokens(NSString *text) {
-    static NSRegularExpression *regex;
-    static dispatch_once_t once;
-    dispatch_once(&once, ^{
-        regex = [NSRegularExpression regularExpressionWithPattern:@"[a-z][a-z0-9_]*\\.eml|[a-z][a-z0-9]*(?:_[a-z0-9]+)*_(?:layout|shelf|banner|promo|carousel|cell|card|hub|featured)"
-                                                          options:0
-                                                            error:nil];
-    });
-    NSMutableOrderedSet<NSString *> *tokens = [NSMutableOrderedSet orderedSet];
-    for (NSTextCheckingResult *match in [regex matchesInString:text options:0 range:NSMakeRange(0, text.length)]) {
-        [tokens addObject:[text substringWithRange:match.range]];
-        if (tokens.count >= 12) break;
+// Printable text around the first promo-like word of the renderer, for the debug log (everything else is shown as a dot).
+static NSString *UYTPromoContext(id target) {
+    @autoreleasepool {
+        NSData *data = UYTSearchableBytes(target);
+        const unsigned char *bytes = (const unsigned char *)data.bytes;
+        size_t length = data.length;
+        for (size_t h = 0; h < UYT_COUNT_OF(kUYTPromoHints); h++) {
+            const char *hint = kUYTPromoHints[h];
+            size_t n = strlen(hint);
+            if (n == 0 || length < n) continue;
+            for (size_t i = 0; i + n <= length; i++) {
+                if (bytes[i] != (unsigned char)hint[0] || memcmp(bytes + i, hint, n) != 0) continue;
+                size_t from = i > 70 ? i - 70 : 0;
+                size_t to = MIN(length, i + n + 70);
+                NSMutableString *out = [NSMutableString stringWithFormat:@"hint \"%s\" at %lu of %lu bytes: ", hint, (unsigned long)i, (unsigned long)length];
+                for (size_t k = from; k < to; k++) {
+                    unsigned char c = bytes[k];
+                    [out appendString:(c >= 0x20 && c < 0x7f) ? [NSString stringWithFormat:@"%c", c] : @"."];
+                }
+                return out;
+            }
+        }
+        return @"(no hint found)";
     }
-    return [tokens.array componentsJoinedByString:@", "];
 }
 
-// A section that was kept but looks like a promo: say so once per distinct shape, so the log can show what the real shelf looks like.
-static void UYTNoteFeaturedCandidate(id section, NSString *text) {
-    static NSMutableSet<NSString *> *seen;
-    static dispatch_once_t once;
-    dispatch_once(&once, ^{ seen = [NSMutableSet set]; });
-    BOOL hasPhrase = NO;
-    for (NSString *hint in @[@"featured", @"Featured", @"FEATURED", @"promo", @"banner", @"campaign", @"Your home for", @"Explore more"]) {
-        if ([text containsString:hint]) { hasPhrase = YES; break; }
-    }
-    if (!hasPhrase) return;
-    NSString *tokens = UYTIdentifierTokens(text);
-    NSString *shape = [NSString stringWithFormat:@"%@|%@", NSStringFromClass([section class]), tokens];
-    @synchronized (seen) {
-        if (seen.count >= 40 || [seen containsObject:shape]) return;
-        [seen addObject:shape];
-    }
-    UYTDebugInfo(@"HideFeatured candidate kept: %@ identifiers=[%@] text-has[Your home for=%d, Explore more=%d, featured=%d] length=%lu",
-                 NSStringFromClass([section class]), tokens,
-                 [text containsString:@"Your home for"], [text containsString:@"Explore more"],
-                 [text localizedCaseInsensitiveContainsString:@"featured"], (unsigned long)text.length);
+// A section that was kept but looks like a promo: say so a few times per launch, so the log can show what the real shelf looks like.
+static void UYTNoteFeaturedCandidate(id section, id target) {
+    if (__atomic_load_n(&sFeaturedCandidateLogs, __ATOMIC_RELAXED) >= kFeaturedCandidateLogMax) return;
+    if (__atomic_fetch_add(&sFeaturedCandidateLogs, 1, __ATOMIC_RELAXED) >= kFeaturedCandidateLogMax) return;
+    UYTDebugInfo(@"HideFeatured candidate kept: %@ %@", NSStringFromClass([section class]), UYTPromoContext(target));
 }
 
 static BOOL UYTIsFeaturedShelf(id section) {
-    NSString *text = UYTSectionText(section);
-    if (text.length == 0) return NO;
-    for (NSString *needle in UYTFeaturedNeedles()) {
-        if ([text containsString:needle]) {
-            UYTDebugInfo(@"HideFeatured removed a %@ (matched \"%@\", %lu chars)", NSStringFromClass([section class]), needle, (unsigned long)text.length);
-            return YES;
-        }
+    id target = UYTFeaturedTarget(section);
+    if (!target) return NO;
+    NSUInteger flags = UYTFeedFlags(target);
+    if (flags & UYTFeedFlagFeatured) {
+        UYTDebugInfo(@"HideFeatured removed a %@", NSStringFromClass([section class]));
+        return YES;
     }
-    UYTNoteFeaturedCandidate(section, text);
+    if ((flags & UYTFeedFlagPromoHint) && __atomic_load_n(&sFeaturedCandidateLogs, __ATOMIC_RELAXED) < kFeaturedCandidateLogMax) {
+        UYTNoteFeaturedCandidate(section, target);
+    }
     return NO;
 }
 
@@ -155,29 +138,6 @@ static NSArray *UYTWithoutFeaturedShelf(NSArray *sections) {
 - (void)replaceEntry:(id)oldEntry withEntry:(id)newEntry {
     if (IS_ENABLED(kHideYouTubeFeatured) && UYTIsFeaturedShelf(newEntry)) return;
     %orig;
-}
-
-%end
-
-// Diagnostic only, nothing is hidden here: if the label is drawn, the data filters above missed the shelf. Report the views
-// it sits in once, so the identifier of the shelf can be read from the log. This hook sees every view that enters a window,
-// so it stops looking after the first report.
-%hook _ASDisplayView
-
-- (void)didMoveToWindow {
-    %orig;
-    static BOOL reported;
-    if (reported || !self.window || !IS_ENABLED(kHideYouTubeFeatured)) return;
-    NSString *label = self.accessibilityLabel;
-    if (label.length == 0 || label.length > 120 || ![label containsString:@"YouTube featured"]) return;
-    reported = YES;
-    NSMutableArray<NSString *> *chain = [NSMutableArray array];
-    NSUInteger depth = 0;
-    for (UIView *view = self; view && depth < 14; view = view.superview, depth++) {
-        NSString *identifier = view.accessibilityIdentifier;
-        [chain addObject:identifier.length ? [NSString stringWithFormat:@"%@(%@)", NSStringFromClass([view class]), identifier] : NSStringFromClass([view class])];
-    }
-    UYTDebugInfo(@"HideFeatured: the label is on screen, so the shelf got past the feed filters. Views: %@", [chain componentsJoinedByString:@" < "]);
 }
 
 %end
