@@ -183,6 +183,9 @@ static NSString *const kNewSettingsUI = @"newSettingsUI_enabled";
 static NSString *const kFlex = @"flex_enabled";
 static NSString *const kGoogleSigninFix = @"googleSigninFix_enabled";
 
+// Defined in uYouPlusVersionSpoofer.xm: turns the App Version Spoofer on for a fresh install (rules are in the comment there).
+void setDefaultVersionSpoofer(NSArray *allKeys);
+
 @interface YouModMigrationManager : NSObject
 + (instancetype)sharedManager;
 - (void)migrateToYouModWithReset:(BOOL)shouldReset;

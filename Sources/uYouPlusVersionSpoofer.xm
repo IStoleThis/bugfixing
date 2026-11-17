@@ -126,6 +126,43 @@ static NSString* getAppVersionForSpoofedVersion(int spoofedVersion) {
     return nil;
 }
 
+// The version a fresh install spoofs. It stays on 20.x on purpose: BigYTMiniPlayer picks its hooks by whether the
+// reported version is 21.0.0 or newer, so a 21.x default could send a 20.10.4 build down the wrong path.
+static NSString *const kDefaultSpoofedAppVersion = @"20.50.10";
+
+// Turns the spoofer on for a fresh install, so an older YouTube build is less likely to be refused as out of date.
+// - Once the on/off key exists nothing happens, so a choice the user made (on or off) is never overwritten.
+//   A version they picked without touching the switch is kept.
+// - Nothing happens when the installed YouTube is not older than the default: spoofing would then report an
+//   older YouTube than the one that is installed.
+// - The row is found by version name, not by number. Rows are added at the top of versionMappings whenever a
+//   newer YouTube is supported, which renumbers every row below.
+void setDefaultVersionSpoofer(NSArray *allKeys) {
+    if ([allKeys containsObject:kEnableVersionSpoofer]) {
+        return;
+    }
+    NSString *installedVersion = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
+    if (![installedVersion isKindOfClass:[NSString class]] ||
+        [installedVersion compare:kDefaultSpoofedAppVersion options:NSNumericSearch] != NSOrderedAscending) {
+        return;
+    }
+    int defaultRow = -1;
+    for (size_t i = 0; i < sizeof(versionMappings) / sizeof(versionMappings[0]); i++) {
+        if ([versionMappings[i].appVersion isEqualToString:kDefaultSpoofedAppVersion]) {
+            defaultRow = versionMappings[i].version;
+            break;
+        }
+    }
+    if (defaultRow < 0) {
+        return;
+    }
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setBool:YES forKey:kEnableVersionSpoofer];
+    if (![allKeys containsObject:@"versionSpoofer"]) {
+        [defaults setInteger:defaultRow forKey:@"versionSpoofer"];
+    }
+}
+
 %hook YTVersionUtils
 + (NSString *)appVersion {
     if (!isVersionSpooferEnabled()) {

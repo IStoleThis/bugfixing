@@ -10,6 +10,7 @@
 ## What this fork changes
 
 - **Fix Casting is on by default again.** The default had been dropped from the code, so new installs started with it off.
+- **App Version Spoofer is on by default.** On a fresh install of a YouTube build older than v20.50.10 (such as 20.10.4) the spoofer starts on and tells YouTube it is v20.50.10, which is meant to keep an old build from being refused as out of date. Only the version YouTube is told changes, not the app itself. A choice you have already made is never overwritten, and a build that is not older than v20.50.10 is left alone. If something misbehaves, turn **Enable App Version Spoofer** off in the uYouEnhanced settings to rule it out.
 - **Casting preflight.** The *Casting Preflight* workflow, and the summary of every build, lists which casting flags a YouTube version still contains. It is there to help find a fix for newer versions.
 - **AltStore / SideStore / Feather source.** Builds published from this fork can be installed with the buttons below.
 - **Casting FAQ** rewritten with the version limit and the known workarounds.
@@ -356,7 +357,7 @@ Sideloaded builds often get a "Local Network access is required" prompt when cas
 - Run the **Casting Preflight** workflow (Actions tab) with your IPA URL to see which casting flags that YouTube version still contains. Every build adds the same report to its run summary.
 
 **Q: YouTube shows an "Update required" / "Please update" screen.**
-Enable **Enable App Version Spoofer** in uYouEnhanced's settings, pick a newer YouTube version from **Version spoofer selector**, and restart the app.
+Enable **Enable App Version Spoofer** in uYouEnhanced's settings, pick a newer YouTube version from **Version spoofer selector**, and restart the app. In this fork the spoofer is already on and set to v20.50.10 for builds older than that, so if the screen still appears, YouTube is rejecting v20.50.10 too: pick a newer version in the selector.
 
 **Q: The app crashes on launch or misbehaves after an update.**
 Make sure you are on the [latest release](https://github.com/arichornlover/uYouEnhanced/releases/latest) and that your YouTube version matches the [version information](#download) table. Note that some **uYou** features do not work on newer YouTube versions (see the news note in the Download section).

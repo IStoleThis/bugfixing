@@ -2053,5 +2053,7 @@ static NSMutableArray <YTIItemSectionRenderer *> *filteredShortsArray(NSArray <Y
     if (![allKeys containsObject:kFixCasting]) {
         [[NSUserDefaults standardUserDefaults] setBool:YES forKey:kFixCasting];
     }
+    // The App Version Spoofer starts on for a fresh install. Rules and the default version: uYouPlusVersionSpoofer.xm.
+    setDefaultVersionSpoofer(allKeys);
 }
 
