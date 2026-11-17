@@ -19,11 +19,20 @@
 //   (isAlwaysAutoconnectEnabled).
 // * -[MDXCastScreenDiscoveryManager onDeviceRemoved:] disconnects from a device as soon as the Cast SDK's discovery reports it
 //   gone, even when a session is running on it.
+// * -[YTWatchLayerViewController didCollapseWatchFlowWithGestureType:] asks +[YTWatchMDXTransitionHelper
+//   isMediaHubWatchPageSwipeDownDismissalEnabledAndSessionActive] and, when the answer is YES, dismisses the player and
+//   disconnects from the TV (-[YTWatchFloatingMiniplayerViewController dismissMiniplayerAndDisconnectFromMDX], MDX error 62)
+//   instead of minimising it to the mini player. That question has a server flag of its own
+//   (cxClientEnableMediaHubWatchPageSwipeDownDismissal) and does not look at the Media Hub flag above, so switching the Media Hub
+//   off does not switch it off. A real cast ended exactly this way: the player was swiped down, then error 62, and the cast was
+//   gone.
+// * -[YTMDXScreenContentController loadWithTransition:] also disconnects with error 62 when a video is started on the phone while
+//   a session is connected and isMediaHubDisconnectOnPlaybackStartedByUserEnabled is on.
 //
-// The hooks below give those four decisions back to the Cast connection: the three flags answer NO and a "device removed" report
-// is ignored while a session is connected. NO is what the app answered before the Media Hub existed, so the older code paths
-// run. Everything sits behind the Fix Casting switch and "Keep Casting on the Cast Connection" (kCastingStayOnCast); turn the
-// second one off in the settings if casting gets worse.
+// The hooks below give those decisions back to the Cast connection: the four flags and the swipe-down question answer NO, and a
+// "device removed" report is ignored while a session is connected. NO is what the app answered before the Media Hub existed, so
+// the older code paths run. Everything sits behind the Fix Casting switch and "Keep Casting on the Cast Connection"
+// (kCastingStayOnCast); turn the second one off in the settings if casting gets worse.
 //
 // Screens that can only be reached through the TV's own app or the cloud (a TV that is not on this network, pairing by TV code)
 // are not affected: they are still listed and can still be connected, they are only no longer swapped in for a Cast screen that
@@ -73,6 +82,34 @@ static BOOL UYTCastSessionIsConnected(void) {
     static dispatch_once_t once;
     dispatch_once(&once, ^{
         UYTDebugInfo(@"[uYouPlus] CastingFix: the Cast route is preferred over the DIAL route for every device (YouTube asked for the DIAL route for non-Chromecasts: %@)", asked ? @"yes" : @"no");
+    });
+    return NO;
+}
+
+// Starting a video on the phone while a session is connected: with this on, YouTube ends the session (error 62) first.
+- (BOOL)isMediaHubDisconnectOnPlaybackStartedByUserEnabled {
+    BOOL asked = %orig;
+    if (!UYTStayOnCast()) return asked;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        UYTDebugInfo(@"[uYouPlus] CastingFix: starting another video while casting no longer ends the cast (YouTube asked for it: %@)", asked ? @"yes" : @"no");
+    });
+    return NO;
+}
+
+%end
+
+%hook YTWatchMDXTransitionHelper
+
+// Asked while the player is dragged down or minimised. A YES (only possible while a session is active and the server flag is on)
+// makes dismissing the player end the cast with error 62; a NO leaves the usual mini player on screen and the cast running. Only
+// a YES is overridden, and only behind the gate; the log line appears the first time that made a difference.
++ (BOOL)isMediaHubWatchPageSwipeDownDismissalEnabledAndSessionActive {
+    BOOL asked = %orig;
+    if (!asked || !UYTStayOnCast()) return asked;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        UYTDebugInfo(@"[uYouPlus] CastingFix: swiping the player down while casting no longer ends the cast (YouTube would have ended it)");
     });
     return NO;
 }
