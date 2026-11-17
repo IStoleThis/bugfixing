@@ -52,6 +52,15 @@ KNOWN_FLAGS = [
     ("YTHotConfig", "isPromptForLocalNetworkPermissionsEnabled", "YES"),
 ]
 
+# The two hook points of this fork's casting fix for YouTube 21.x (Sources/uYouPlusCastingFix.xm), found by reading the
+# 21.38.2 binary: (class, selector, what the hook does)
+CASTING_FIX_HOOKS = [
+    ("MDXLocalNetworkPermissionsImpl", "localNetworkPermissionCheckRequired",
+     "stops YouTube's multicast permission probe, which always fails on a re-signed app"),
+    ("GCKCastOptions", "isCustomMulticastEnabled",
+     "makes the Cast SDK find Chromecasts through the system's Bonjour instead of its own multicast sockets"),
+]
+
 LOCAL_NETWORK = re.compile(r"local[ _-]?network", re.IGNORECASE)
 # Casting-ish names. "Cast" is matched with a capital C (or a leading "cast") so
 # that "broadcast"/"podcast" do not match.
@@ -63,6 +72,10 @@ CLASS_KINDS = re.compile(r"Permission|Discovery|Bonjour|Multicast|Scanner|Browse
 
 def warn(msg):
     print("::warning title=Casting preflight::%s" % msg, file=sys.stderr)
+
+
+def notice(msg):
+    print("::notice title=Casting preflight::%s" % msg, file=sys.stderr)
 
 
 def vtuple(version):
@@ -201,17 +214,29 @@ def main():
     selector_set = set(selectors)
 
     # --- verdict ---------------------------------------------------------
+    class_set = set(classes)
     present = [f for f in KNOWN_FLAGS if f[1] in selector_set]
+    hooks_present = [h for h in CASTING_FIX_HOOKS if h[0] in class_set and h[1] in selector_set]
+    hooks_ok = len(hooks_present) == len(CASTING_FIX_HOOKS)
     newer = vtuple(version) > vtuple(LAST_KNOWN_GOOD)
-    if not present:
+    if hooks_ok and (newer or not present):
+        verdict = ("YouTube %s is newer than %s, so the A/B flags behind **Fix Casting** no longer decide anything "
+                   "here (%d of %d still exist). Both hook points of this fork's 21.x casting fix are in this build, "
+                   "so keep **Fix Casting** on. That fix comes from reading the 21.38.2 binary and has not been "
+                   "confirmed on a device yet." % (version, LAST_KNOWN_GOOD, len(present), len(KNOWN_FLAGS)))
+        notice("YouTube %s: the 21.x casting fix applies (hook points found); not confirmed on a device yet" % version)
+    elif not present:
         verdict = ("None of the %d A/B flags used by **Fix Casting** exist in YouTube %s, so enabling it "
-                   "changes nothing here." % (len(KNOWN_FLAGS), version))
-        warn("Fix Casting flags are gone from YouTube %s; casting will not be fixed by them" % version)
+                   "changes nothing here. The hook points of this fork's 21.x casting fix are missing too "
+                   "(%d of %d found)." % (len(KNOWN_FLAGS), version, len(hooks_present), len(CASTING_FIX_HOOKS)))
+        warn("Fix Casting flags and casting fix hook points are gone from YouTube %s" % version)
     elif newer:
         verdict = ("The Fix Casting flags still exist, but YouTube %s is newer than %s, the last version they are "
-                   "documented to work on (YouTube Plus's FAQ says 20.14.1). Expect casting to stay broken for "
-                   "sideloaded builds." % (version, LAST_KNOWN_GOOD))
-        warn("YouTube %s is newer than %s; Fix Casting is not expected to work" % (version, LAST_KNOWN_GOOD))
+                   "documented to work on (YouTube Plus's FAQ says 20.14.1), and the hook points of this fork's "
+                   "21.x casting fix are not all present (%d of %d found). Expect casting to stay broken for "
+                   "sideloaded builds." % (version, LAST_KNOWN_GOOD, len(hooks_present), len(CASTING_FIX_HOOKS)))
+        warn("YouTube %s is newer than %s and the 21.x casting fix does not fit; casting is not expected to work"
+             % (version, LAST_KNOWN_GOOD))
     else:
         verdict = ("YouTube %s is within the range where **Fix Casting** is expected to work "
                    "(up to %s). Leave it enabled." % (version, LAST_KNOWN_GOOD))
@@ -227,6 +252,20 @@ def main():
     out.append("|---|---|---|---|")
     for cls, flag, value in KNOWN_FLAGS:
         out.append("| `%s` | `%s` | %s | %s |" % (cls, flag, value, "present" if flag in selector_set else "**missing**"))
+    out.append("")
+
+    # --- hook points of the 21.x fix -----------------------------------------
+    out.append("### Hook points of this fork's casting fix for YouTube 21.x")
+    out.append("")
+    out.append("| Class | Method | What the hook does | Class in this YouTube version | Method name in this YouTube version |")
+    out.append("|---|---|---|---|---|")
+    for cls, sel, what in CASTING_FIX_HOOKS:
+        out.append("| `%s` | `%s` | %s | %s | %s |" % (
+            cls, sel, what,
+            "present" if cls in class_set else "**missing**",
+            "present" if sel in selector_set else "**missing**"))
+    out.append("")
+    out.append("_Names are matched anywhere in the binary, not per class._")
     out.append("")
 
     # --- Info.plist --------------------------------------------------------
@@ -296,10 +335,14 @@ def main():
     # --- what to do -----------------------------------------------------------
     out.append("### If casting is broken")
     out.append("")
-    out.append("- Build with a YouTube IPA at or below %s and keep **Fix Casting** on (YTweaks settings)." % LAST_KNOWN_GOOD)
+    out.append("- Keep **Fix Casting** on (YTweaks settings) and make sure **Local Network** is on for YouTube in "
+               "iOS Settings. iOS asks the first time YouTube looks for devices.")
+    out.append("- Open **uYouEnhanced Debug Logs** in the settings after trying to cast and export the report. "
+               "Lines that start with `[uYouPlus] CastingFix` show whether the casting fix was reached.")
     out.append("- Pair the TV manually with its code (reported to work while the app stays open), or use AirPlay if "
                "the TV supports it (iOS does that discovery, not the app).")
-    out.append("- To look for replacement flags, share the **local network** list above.")
+    out.append("- A YouTube IPA at or below %s still works with the flags alone, without the 21.x fix." % LAST_KNOWN_GOOD)
+    out.append("- To look for other hook points, share the **local network** list above.")
 
     print("\n".join(out))
     return 0

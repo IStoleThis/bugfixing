@@ -5,15 +5,16 @@
 
 | Bug | Status |
 | --- | --- |
-| Casting to a TV or Chromecast says "Local Network access is required" even though the permission is on | **Partly addressed.** Fix Casting is on by default again, but it is only documented to work up to YouTube **20.10.4** ([YTweaks](https://github.com/fosterbarnes/YTweaks#supported-youtube-versions)), so build with 20.10.4 or older. On newer YouTube versions casting is still broken and under investigation. |
+| Casting to a TV or Chromecast says "Local Network access is required" even though the permission is on | **Fix attempted, not confirmed on a device yet.** For YouTube **21.x** Fix Casting now also carries two hooks found by reading the 21.38.2 binary (details in the casting FAQ below). YouTube **20.10.4** and older use the flag-based fix from [YTweaks](https://github.com/fosterbarnes/YTweaks#supported-youtube-versions) instead. |
 
 ## What this fork changes
 
 - **Fix Casting is on by default again.** The default had been dropped from the code, so new installs started with it off.
 - **App Version Spoofer is on by default.** On a fresh install of a YouTube build older than v20.50.10 (such as 20.10.4) the spoofer starts on and tells YouTube it is v20.50.10, which is meant to keep an old build from being refused as out of date. Only the version YouTube is told changes, not the app itself. A choice you have already made is never overwritten, and a build that is not older than v20.50.10 is left alone. If something misbehaves, turn **Enable App Version Spoofer** off in the uYouEnhanced settings to rule it out.
-- **Casting preflight.** The *Casting Preflight* workflow, and the summary of every build, lists which casting flags a YouTube version still contains. It is there to help find a fix for newer versions.
+- **Casting fix for YouTube 21.x (experimental).** Two small hooks behind the Fix Casting switch, in `Sources/uYouPlusCastingFix.xm`. A re-signed app cannot send to multicast addresses, and YouTube 21.x uses one to check the Local Network permission and the Cast SDK uses its own multicast client to find Chromecasts, so casting is refused even with the permission on. The hooks make YouTube skip that check and make the Cast SDK find Chromecasts through the system's Bonjour instead. This was worked out from the 21.38.2 binary and has not been confirmed on a device yet, so please report how it goes.
+- **Casting preflight.** The *Casting Preflight* workflow, and the summary of every build, lists which casting flags and which hook points of the 21.x fix a YouTube version still contains.
 - **AltStore / SideStore / Feather source.** Builds published from this fork can be installed with the buttons below.
-- **Casting FAQ** rewritten with the version limit and the known workarounds.
+- **Casting FAQ** rewritten with the current status and the known workarounds.
 
 ## Install this fork
 
@@ -351,10 +352,12 @@ These builds are not signed for your device: AltStore and SideStore sign them wi
 # Frequently asked questions
 
 **Q: Casting to a TV/Chromecast stopped working.**
-Sideloaded builds often get a "Local Network access is required" prompt when casting, even though the permission is already on in iOS Settings. **Fix Casting** (YTweaks settings, on by default) changes the A/B flags behind that check, but it is only documented to work up to YouTube **20.10.4** ([YTweaks README](https://github.com/fosterbarnes/YTweaks#supported-youtube-versions); the [YouTube Plus FAQ](https://teletype.in/@dvntm/ytplus_faq) says 20.14.1). On newer versions no tweak-level fix is known yet.
-- Build with a YouTube IPA at or below 20.10.4, and restart the app after changing Fix Casting.
-- Or pair the TV manually with its code, or use AirPlay if the TV supports it.
-- Run the **Casting Preflight** workflow (Actions tab) with your IPA URL to see which casting flags that YouTube version still contains. Every build adds the same report to its run summary.
+Sideloaded builds often say "Local Network access is required" when casting, or find no devices, even though the permission is on in iOS Settings. What YouTube 21.38.2's code does (read from the binary): the app is re-signed with your own certificate, which cannot carry the multicast entitlement, yet YouTube checks the permission by sending a packet to a multicast address, and the Cast SDK looks for Chromecasts the same way. Both sends fail, so YouTube concludes the permission is denied.
+- **On YouTube 21.x:** keep **Fix Casting** on (the default) and restart the app after changing it. It now switches both multicast uses off. This is experimental and has not been confirmed on a device yet. iOS asks for Local Network access the first time YouTube looks for devices, so tap Allow; if you said no earlier, turn on Local Network for YouTube in iOS Settings.
+- If it still fails, try to cast, then open **uYouEnhanced Debug Logs** in the settings, export the report and share it. Lines that start with `[uYouPlus] CastingFix` show whether the fix ran.
+- **On YouTube 20.10.4 or older**, Fix Casting works through A/B flags instead ([YTweaks README](https://github.com/fosterbarnes/YTweaks#supported-youtube-versions); the [YouTube Plus FAQ](https://teletype.in/@dvntm/ytplus_faq) says 20.14.1).
+- TVs that can only be found through SSDP (older TVs without Chromecast built in) stay undiscoverable on a sideloaded build for the same reason. Pair those with the TV code, or use AirPlay if the TV supports it.
+- Run the **Casting Preflight** workflow (Actions tab) with your IPA URL to see which casting flags and fix hook points that YouTube version contains. Every build adds the same report to its run summary.
 
 **Q: YouTube shows an "Update required" / "Please update" screen.**
 Enable **Enable App Version Spoofer** in uYouEnhanced's settings, pick a newer YouTube version from **Version spoofer selector**, and restart the app. In this fork the spoofer is already on and set to v20.50.10 for builds older than that, so if the screen still appears, YouTube is rejecting v20.50.10 too: pick a newer version in the selector.
