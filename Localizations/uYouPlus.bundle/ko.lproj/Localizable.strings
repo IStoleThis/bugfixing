@@ -117,6 +117,9 @@
 
 "HIDE_UYOU" = "uYou 탭 숨기기";
 "HIDE_ISPONSORBLOCK" = "iSponsorBlock 버튼 숨기기";
+"HIDE_ISPONSORBLOCK_DESC" = "Removes iSponsorBlock's button from the top bar, next to the cast and search buttons. Its settings are under iSponsorBlock Settings below. Applies the next time a page is opened.";
+"ISPONSORBLOCK_SETTINGS" = "iSponsorBlock Settings";
+"ISPONSORBLOCK_SETTINGS_DESC" = "Opens iSponsorBlock's own settings: which segments to skip, the skip notice, the channel whitelist and the buttons in the player.";
 
 "CAST_CONFIRM" = "장치 전송 알림 (YTCastConfirm)";
 "CAST_CONFIRM_DESC" = "의도치 않게 다른 장치로 영상을 전송하지 않도록 보내기 전에 확인 메시지를 표시합니다.";
@@ -317,6 +320,8 @@
 "CASTING_STAY_ON_CAST_DESC" = "Stops YouTube from moving a cast over to the TV's own YouTube app (Media Hub), which can end the cast after a few seconds and start ads on the TV. Also keeps the cast running when you swipe the player down or start another video. Turn this off if casting gets worse.";
 "CASTING_DIAGNOSTICS" = "Casting Diagnostics";
 "CASTING_DIAGNOSTICS_DESC" = "Records what happens to a cast, and turns on the Cast SDK's own log, so both can be added to the Debug Logs export. Nothing is sent anywhere.";
+"CASTING_SPONSORBLOCK" = "SponsorBlock While Casting";
+"CASTING_SPONSORBLOCK_DESC" = "Skips SponsorBlock segments on the TV while casting, with fixes for casting: each skip lands just past the end of the segment (the TV only takes whole seconds), a skip the TV missed is sent again, and the channel whitelist checks the video on the TV. Each skip is also added to the casting diagnostics. With this off, iSponsorBlock runs unchanged.";
 "FAKE_PREMIUM" = "가짜 Premium";
 "FAKE_PREMIUM_DESC" = "You 탭에 프리미엄 로고와 가짜 버튼을 보여줍니다.";
 "FAKE_PREMIUM_WARNING" = "*You* 탭은 v%@ 버전에는 없으므로 가자 버튼을 표시할 수 없습니다.\n하지만 *가짜 프리미엄 로고*는 보여줍니다.";

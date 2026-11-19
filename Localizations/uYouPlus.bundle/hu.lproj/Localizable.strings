@@ -117,6 +117,9 @@
 
 "HIDE_UYOU" = "Hide uYou tab";
 "HIDE_ISPONSORBLOCK" = "Hide iSponsorBlock button";
+"HIDE_ISPONSORBLOCK_DESC" = "Removes iSponsorBlock's button from the top bar, next to the cast and search buttons. Its settings are under iSponsorBlock Settings below. Applies the next time a page is opened.";
+"ISPONSORBLOCK_SETTINGS" = "iSponsorBlock Settings";
+"ISPONSORBLOCK_SETTINGS_DESC" = "Opens iSponsorBlock's own settings: which segments to skip, the skip notice, the channel whitelist and the buttons in the player.";
 
 "CAST_CONFIRM" = "Megerősítés átküldés előtt (YTCastConfirm)";
 "CAST_CONFIRM_DESC" = "Az átküldés előtt mutasson megerősítő figyelmeztetést, hogy megakadályozza a TV véletlen eltérítését.";
@@ -317,6 +320,8 @@
 "CASTING_STAY_ON_CAST_DESC" = "Stops YouTube from moving a cast over to the TV's own YouTube app (Media Hub), which can end the cast after a few seconds and start ads on the TV. Also keeps the cast running when you swipe the player down or start another video. Turn this off if casting gets worse.";
 "CASTING_DIAGNOSTICS" = "Casting Diagnostics";
 "CASTING_DIAGNOSTICS_DESC" = "Records what happens to a cast, and turns on the Cast SDK's own log, so both can be added to the Debug Logs export. Nothing is sent anywhere.";
+"CASTING_SPONSORBLOCK" = "SponsorBlock While Casting";
+"CASTING_SPONSORBLOCK_DESC" = "Skips SponsorBlock segments on the TV while casting, with fixes for casting: each skip lands just past the end of the segment (the TV only takes whole seconds), a skip the TV missed is sent again, and the channel whitelist checks the video on the TV. Each skip is also added to the casting diagnostics. With this off, iSponsorBlock runs unchanged.";
 "FAKE_PREMIUM" = "Fake Premium";
 "FAKE_PREMIUM_DESC" = "Uses Premium logo and creates fake buttons in the You tab.";
 "FAKE_PREMIUM_WARNING" = "The *You* Tab doesn't exist in v%@, fake buttons will not be created.\nBut the *Fake Premium Logo* will still work.";

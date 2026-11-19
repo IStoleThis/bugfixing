@@ -185,6 +185,7 @@ static NSString *const kGoogleSigninFix = @"googleSigninFix_enabled";
 static NSString *const kHideYouTubeFeatured = @"hideYouTubeFeatured_enabled";
 static NSString *const kCastingStayOnCast = @"castingStayOnCast_enabled";
 static NSString *const kCastingDiagnostics = @"castingDiagnostics_enabled";
+static NSString *const kCastingSponsorBlock = @"castingSponsorBlock_enabled";
 
 // Defined in uYouPlusVersionSpoofer.xm: turns the App Version Spoofer on for a fresh install (rules are in the comment there).
 void setDefaultVersionSpoofer(NSArray *allKeys);

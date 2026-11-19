@@ -532,6 +532,27 @@ NSString *cacheDescription = [NSString stringWithFormat:@"%@", GetCacheSize()];
     SWITCH2(LOC(@"HIDE_SHORTS_TAB"), LOC(@"RESTART_REQUIRED"), @"hideShortsTab");
     SWITCH2(LOC(@"HIDE_CREATE_TAB"), LOC(@"RESTART_REQUIRED"), @"hideCreateTab");
     SWITCH2(LOC(@"HIDE_UYOU"), LOC(@"RESTART_REQUIRED"), @"hideUYouTab");
+    // iSponsorBlock's button in the top bar (uYouPlusHideiSponsorBlockButton.xm), hidden by default in this fork, and a way to reach
+    // iSponsorBlock's own settings without it. Listed only when the build includes iSponsorBlock.
+    Class iSponsorBlockSettingsClass = NSClassFromString(@"SponsorBlockSettingsController");
+    if (iSponsorBlockSettingsClass) {
+        SWITCH(LOC(@"HIDE_ISPONSORBLOCK"), LOC(@"HIDE_ISPONSORBLOCK_DESC"), kHideiSponsorBlockButton);
+        YTSettingsSectionItem *iSponsorBlockSettings = [%c(YTSettingsSectionItem)
+            itemWithTitle:LOC(@"ISPONSORBLOCK_SETTINGS")
+            titleDescription:LOC(@"ISPONSORBLOCK_SETTINGS_DESC")
+            accessibilityIdentifier:nil
+            detailTextBlock:nil
+            selectBlock:^BOOL (YTSettingsCell *cell, NSUInteger arg1) {
+                // iSponsorBlock's screen closes itself with an X that dismisses it, so it is shown the way iSponsorBlock shows it:
+                // in a navigation controller of its own, presented over the settings.
+                UIViewController *iSponsorBlockController = [[iSponsorBlockSettingsClass alloc] init];
+                UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:iSponsorBlockController];
+                [settingsViewController presentViewController:navigationController animated:YES completion:nil];
+                return YES;
+            }
+        ];
+        [sectionItems addObject:iSponsorBlockSettings];
+    }
     SWITCH3(
         LOC(@"LOW_CONTRAST_MODE"),
         LOC(@"LOW_CONTRAST_MODE_DESC"),
@@ -866,6 +887,10 @@ NSString *cacheDescription = [NSString stringWithFormat:@"%@", GetCacheSize()];
     SWITCH2(LOC(@"FIX_PLAYBACK_ISSUES"), LOC(@"FIX_PLAYBACK_ISSUES_DESC"), kFixPlaybackIssues);
     SWITCH2(LOC(@"CASTING_STAY_ON_CAST"), LOC(@"CASTING_STAY_ON_CAST_DESC"), kCastingStayOnCast);
     SWITCH2(LOC(@"CASTING_DIAGNOSTICS"), LOC(@"CASTING_DIAGNOSTICS_DESC"), kCastingDiagnostics);
+    // uYouPlusCastingSponsorBlock.xm; read on every skip, so no restart. Listed only when the build includes iSponsorBlock.
+    if (NSClassFromString(@"SponsorBlockSettingsController")) {
+        SWITCH(LOC(@"CASTING_SPONSORBLOCK"), LOC(@"CASTING_SPONSORBLOCK_DESC"), kCastingSponsorBlock);
+    }
     SWITCH3(
         LOC(@"FAKE_PREMIUM"),
         LOC(@"FAKE_PREMIUM_DESC"),
