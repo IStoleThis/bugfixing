@@ -14,7 +14,13 @@
 // What is not known: the exact text that the shelf's renderer contains has not been seen on a device. The label shown on
 // screen ("YouTube featured") is what is matched, plus identifier-style spellings of it. If the shelf is still there after
 // a feed refresh, the debug log has what is needed to fix the match, a few lines at most per launch:
-//   [UYT-I] HideFeatured candidate kept ...  a section that looks like a promo and was kept, with the text around the hint
+//   [UYT-I] HideShelf candidate kept ...  a section that looks like a promo and was kept, with the text around the hint
+//
+// The same filter also drops the "Communities you may like" shelf (posts from channel communities) behind its own switch,
+// kHideCommunitiesShelf (on by default). In YouTube 21.38.2 the post cards of that shelf can come out wider than the screen, so
+// half of the picture and the text run off the right edge. The cards are laid out by YouTube's server (Elements), and the app
+// has no setting for their size, so the shelf is removed instead. It is matched by its title, "Communities you may like"
+// (English only). A community section that was kept shows up in the debug log as a candidate (hint "Communities").
 #import "uYouPlus.h"
 #import "UYTLog.h"
 #import "UYTFeedText.h"
@@ -70,15 +76,24 @@ static NSString *UYTPromoContext(id target) {
 static void UYTNoteFeaturedCandidate(id section, id target) {
     if (__atomic_load_n(&sFeaturedCandidateLogs, __ATOMIC_RELAXED) >= kFeaturedCandidateLogMax) return;
     if (__atomic_fetch_add(&sFeaturedCandidateLogs, 1, __ATOMIC_RELAXED) >= kFeaturedCandidateLogMax) return;
-    UYTDebugInfo(@"HideFeatured candidate kept: %@ %@", NSStringFromClass([section class]), UYTPromoContext(target));
+    UYTDebugInfo(@"HideShelf candidate kept: %@ %@", NSStringFromClass([section class]), UYTPromoContext(target));
 }
 
-static BOOL UYTIsFeaturedShelf(id section) {
+// The shelves to drop, from the switches: UYTFeedFlagFeatured and/or UYTFeedFlagCommunitiesShelf (0 when both are off).
+static NSUInteger UYTHiddenShelfFlags(void) {
+    return (IS_ENABLED(kHideYouTubeFeatured) ? UYTFeedFlagFeatured : 0) | (IS_ENABLED(kHideCommunitiesShelf) ? UYTFeedFlagCommunitiesShelf : 0);
+}
+
+static BOOL UYTIsHiddenShelf(id section, NSUInteger drop) {
     id target = UYTFeaturedTarget(section);
     if (!target) return NO;
     NSUInteger flags = UYTFeedFlags(target);
-    if (flags & UYTFeedFlagFeatured) {
+    if (flags & drop & UYTFeedFlagFeatured) {
         UYTDebugInfo(@"HideFeatured removed a %@", NSStringFromClass([section class]));
+        return YES;
+    }
+    if (flags & drop & UYTFeedFlagCommunitiesShelf) {
+        UYTDebugInfo(@"HideCommunities removed a %@", NSStringFromClass([section class]));
         return YES;
     }
     if ((flags & UYTFeedFlagPromoHint) && __atomic_load_n(&sFeaturedCandidateLogs, __ATOMIC_RELAXED) < kFeaturedCandidateLogMax) {
@@ -87,15 +102,16 @@ static BOOL UYTIsFeaturedShelf(id section) {
     return NO;
 }
 
-// The same array when nothing matches (so callers can compare pointers), otherwise a mutable copy without the shelf.
+// The same array when nothing matches (so callers can compare pointers), otherwise a mutable copy without the shelves.
 static NSArray *UYTWithoutFeaturedShelf(NSArray *sections) {
-    if (!IS_ENABLED(kHideYouTubeFeatured) || ![sections isKindOfClass:[NSArray class]] || sections.count == 0) return sections;
-    NSIndexSet *featured = [sections indexesOfObjectsPassingTest:^BOOL(id section, NSUInteger index, BOOL *stop) {
-        return UYTIsFeaturedShelf(section);
+    NSUInteger drop = UYTHiddenShelfFlags();
+    if (!drop || ![sections isKindOfClass:[NSArray class]] || sections.count == 0) return sections;
+    NSIndexSet *hidden = [sections indexesOfObjectsPassingTest:^BOOL(id section, NSUInteger index, BOOL *stop) {
+        return UYTIsHiddenShelf(section, drop);
     }];
-    if (featured.count == 0) return sections;
+    if (hidden.count == 0) return sections;
     NSMutableArray *kept = [sections mutableCopy];
-    [kept removeObjectsAtIndexes:featured];
+    [kept removeObjectsAtIndexes:hidden];
     return kept;
 }
 
@@ -104,7 +120,7 @@ static NSArray *UYTWithoutFeaturedShelf(NSArray *sections) {
 %hook YTInnerTubeCollectionViewController
 
 - (void)displaySectionsWithReloadingSectionControllerByRenderer:(id)renderer {
-    if (IS_ENABLED(kHideYouTubeFeatured)) {
+    if (UYTHiddenShelfFlags()) {
         @try {
             NSArray *current = [self valueForKey:@"_sectionRenderers"];
             NSArray *kept = UYTWithoutFeaturedShelf(current);
@@ -136,7 +152,8 @@ static NSArray *UYTWithoutFeaturedShelf(NSArray *sections) {
 }
 
 - (void)replaceEntry:(id)oldEntry withEntry:(id)newEntry {
-    if (IS_ENABLED(kHideYouTubeFeatured) && UYTIsFeaturedShelf(newEntry)) return;
+    NSUInteger drop = UYTHiddenShelfFlags();
+    if (drop && UYTIsHiddenShelf(newEntry, drop)) return;
     %orig;
 }
 
@@ -145,6 +162,6 @@ static NSArray *UYTWithoutFeaturedShelf(NSArray *sections) {
 %end
 
 %ctor {
-    // The switch is read each time a feed section arrives, so the group is always installed.
+    // The switches are read each time a feed section arrives, so the group is always installed.
     %init(gHideYouTubeFeatured);
 }

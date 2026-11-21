@@ -338,6 +338,10 @@
 "HIDE_COMMUNITY_POSTS_DESC" = "隐藏Community Posts. 更改后需要重启应用。";
 "HIDE_YOUTUBE_FEATURED" = "Hide YouTube Featured Shelf";
 "HIDE_YOUTUBE_FEATURED_DESC" = "Hides YouTube's own \"YouTube featured\" promo shelf (for example \"Your home for ...\") on the Home feed. Applies the next time the feed loads.";
+"HIDE_COMMUNITIES_SHELF" = "Hide \"Communities you may like\"";
+"HIDE_COMMUNITIES_SHELF_DESC" = "Hides the \"Communities you may like\" shelf on the Home feed. Its post cards can come out wider than the screen, with half of the picture cut off. Applies the next time the feed loads.";
+"MUTE_VIDEO_PREVIEWS" = "Mute Video Previews";
+"MUTE_VIDEO_PREVIEWS_DESC" = "Video previews in the feeds (Home, Subscriptions, Search) always play without sound, also after a volume button is pressed, and their speaker button is hidden. Opening the video plays it with sound as usual.";
 "HIDE_HEADER_LINKS_UNDER_PROFILE" = "隐藏 Header Links under channel profile";
 "HIDE_HEADER_LINKS_UNDER_PROFILE_DESC" = "隐藏sthe Header Links under any channel profile.";
 "AUTO_HIDE_HOME_INDICATOR" = "自动隐藏主页面小白条";

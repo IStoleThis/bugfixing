@@ -25,6 +25,7 @@ static const NSUInteger UYTFeedFlagFeatured = 1 << 1;     // the "YouTube featur
 static const NSUInteger UYTFeedFlagShortsShelf = 1 << 2;  // a Shorts shelf
 static const NSUInteger UYTFeedFlagShortsCell = 1 << 3;   // a Shorts video cell
 static const NSUInteger UYTFeedFlagPromoHint = 1 << 4;    // looks like a promo (kUYTPromoHints), only used for the debug log
+static const NSUInteger UYTFeedFlagCommunitiesShelf = 1 << 5; // the "Communities you may like" shelf (kUYTCommunitiesShelfNames)
 static const NSUInteger UYTFeedFlagKnown = 1 << 7;        // the answer has been worked out (so "no flags" can be told from "not asked")
 
 // The names the ad filters look for in a renderer's text.
@@ -56,11 +57,14 @@ static const char *const kUYTAdNames[] = {
 // The "YouTube featured" promo shelf: the label that is drawn, plus identifier-style spellings of it.
 static const char *const kUYTFeaturedNames[] = {"YouTube featured", "youtube_featured", "yt_featured"};
 
+// The "Communities you may like" shelf of the Home feed (posts from channel communities): the title that is drawn.
+static const char *const kUYTCommunitiesShelfNames[] = {"Communities you may like"};
+
 static const char *const kUYTShortsShelfNames[] = {"shorts_shelf"};
 static const char *const kUYTShortsCellNames[] = {"shorts_video_cell"};
 
 // Words that make a renderer look like a promo. Only for the debug log, see HideYouTubeFeatured.xm.
-static const char *const kUYTPromoHints[] = {"featured", "Featured", "FEATURED", "promo", "banner", "campaign", "Your home for", "Explore more"};
+static const char *const kUYTPromoHints[] = {"featured", "Featured", "FEATURED", "promo", "banner", "campaign", "Your home for", "Explore more", "Communities"};
 
 #define UYT_COUNT_OF(a) (sizeof(a) / sizeof((a)[0]))
 
@@ -121,6 +125,7 @@ static inline NSUInteger UYTComputeFeedFlags(id message) {
         size_t length = data.length;
         if (UYTBytesHaveAny(bytes, length, kUYTAdNames, UYT_COUNT_OF(kUYTAdNames))) flags |= UYTFeedFlagAd;
         if (UYTBytesHaveAny(bytes, length, kUYTFeaturedNames, UYT_COUNT_OF(kUYTFeaturedNames))) flags |= UYTFeedFlagFeatured;
+        if (UYTBytesHaveAny(bytes, length, kUYTCommunitiesShelfNames, UYT_COUNT_OF(kUYTCommunitiesShelfNames))) flags |= UYTFeedFlagCommunitiesShelf;
         if (UYTBytesHaveAny(bytes, length, kUYTShortsShelfNames, UYT_COUNT_OF(kUYTShortsShelfNames))) flags |= UYTFeedFlagShortsShelf;
         if (UYTBytesHaveAny(bytes, length, kUYTShortsCellNames, UYT_COUNT_OF(kUYTShortsCellNames))) flags |= UYTFeedFlagShortsCell;
         if (UYTBytesHaveAny(bytes, length, kUYTPromoHints, UYT_COUNT_OF(kUYTPromoHints))) flags |= UYTFeedFlagPromoHint;

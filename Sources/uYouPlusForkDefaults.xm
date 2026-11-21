@@ -12,6 +12,9 @@
 //   * "SponsorBlock While Casting" (uYouPlusCastingSponsorBlock.xm) on.
 //   * iSponsorBlock's button in the top bar hidden (uYouPlusHideiSponsorBlockButton.xm); its settings are on the uYouEnhanced
 //     settings page instead.
+// Version 3:
+//   * "Mute Video Previews" (uYouPlusMutedFeedPreviews.xm) on.
+//   * "Communities you may like" shelf on the Home feed hidden (HideYouTubeFeatured.xm).
 //
 // This is a versioned, run-once migration rather than "set it when the key is missing". An install that was updated from an
 // earlier build already holds stored values for some of these keys (the ad-block switches are written on the first launch),
@@ -26,7 +29,7 @@
 #import "uYouPlus.h"
 #import "UYTLog.h"
 
-static const NSInteger kForkDefaultsVersion = 2;
+static const NSInteger kForkDefaultsVersion = 3;
 static NSString *const kForkDefaultsVersionKey = @"bugfixingForkDefaultsVersion";
 
 void UYTApplyForkDefaults(void) {
@@ -61,11 +64,18 @@ void UYTApplyForkDefaults(void) {
             [defaults setBool:YES forKey:kHideiSponsorBlockButton];
         }
 
+        if (applied < 3) {
+            // Home feed: silent previews, no "Communities you may like" shelf.
+            [defaults setBool:YES forKey:kMuteVideoPreviews];
+            [defaults setBool:YES forKey:kHideCommunitiesShelf];
+        }
+
         [defaults setInteger:kForkDefaultsVersion forKey:kForkDefaultsVersionKey];
 
         UYTLogInstall();
-        UYTDebugInfo(@"ForkDefaults v%ld applied (this install was at v%ld): %@%@", (long)kForkDefaultsVersion, (long)applied,
+        UYTDebugInfo(@"ForkDefaults v%ld applied (this install was at v%ld): %@%@%@", (long)kForkDefaultsVersion, (long)applied,
             applied < 1 ? @"AdBlock Workaround on, Shorts/Create/uYou tabs hidden, YouTube featured shelf hidden, casting switches on; " : @"",
-            @"SponsorBlock While Casting on, iSponsorBlock top bar button hidden");
+            applied < 2 ? @"SponsorBlock While Casting on, iSponsorBlock top bar button hidden; " : @"",
+            @"video previews muted, Communities you may like shelf hidden");
     });
 }

@@ -975,6 +975,9 @@ NSString *cacheDescription = [NSString stringWithFormat:@"%@", GetCacheSize()];
     SWITCH(LOC(@"HIDE_PLAY_NEXT_IN_QUEUE"), LOC(@"HIDE_PLAY_NEXT_IN_QUEUE_DESC"), kHidePlayNextInQueue);
     SWITCH2(LOC(@"HIDE_COMMUNITY_POSTS"), LOC(@"HIDE_COMMUNITY_POSTS_DESC"), kHideCommunityPosts);
     SWITCH(LOC(@"HIDE_YOUTUBE_FEATURED"), LOC(@"HIDE_YOUTUBE_FEATURED_DESC"), kHideYouTubeFeatured);
+    // HideYouTubeFeatured.xm and uYouPlusMutedFeedPreviews.xm; both are read each time, so no restart.
+    SWITCH(LOC(@"HIDE_COMMUNITIES_SHELF"), LOC(@"HIDE_COMMUNITIES_SHELF_DESC"), kHideCommunitiesShelf);
+    SWITCH(LOC(@"MUTE_VIDEO_PREVIEWS"), LOC(@"MUTE_VIDEO_PREVIEWS_DESC"), kMuteVideoPreviews);
     SWITCH2(LOC(@"HIDE_HEADER_LINKS_UNDER_PROFILE"), LOC(@"HIDE_HEADER_LINKS_UNDER_PROFILE_DESC"), kHideChannelHeaderLinks);
     SWITCH2(LOC(@"IPHONE_LAYOUT"), LOC(@"IPHONE_LAYOUT_DESC"), kiPhoneLayout);
     SWITCH2(LOC(@"NEW_MINIPLAYER_STYLE"), LOC(@"NEW_MINIPLAYER_STYLE_DESC"), kBigYTMiniPlayer);
