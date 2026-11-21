@@ -978,6 +978,9 @@ NSString *cacheDescription = [NSString stringWithFormat:@"%@", GetCacheSize()];
     // HideYouTubeFeatured.xm and uYouPlusMutedFeedPreviews.xm; both are read each time, so no restart.
     SWITCH(LOC(@"HIDE_COMMUNITIES_SHELF"), LOC(@"HIDE_COMMUNITIES_SHELF_DESC"), kHideCommunitiesShelf);
     SWITCH(LOC(@"MUTE_VIDEO_PREVIEWS"), LOC(@"MUTE_VIDEO_PREVIEWS_DESC"), kMuteVideoPreviews);
+    // uYouPlusFitShelfCards.xm and uYouPlusRotateButtonFix.xm; both are read each time, so no restart.
+    SWITCH(LOC(@"FIT_SHELF_CARDS"), LOC(@"FIT_SHELF_CARDS_DESC"), kFitShelfCards);
+    SWITCH(LOC(@"FIX_ROTATE_BUTTON"), LOC(@"FIX_ROTATE_BUTTON_DESC"), kFixRotateButton);
     SWITCH2(LOC(@"HIDE_HEADER_LINKS_UNDER_PROFILE"), LOC(@"HIDE_HEADER_LINKS_UNDER_PROFILE_DESC"), kHideChannelHeaderLinks);
     SWITCH2(LOC(@"IPHONE_LAYOUT"), LOC(@"IPHONE_LAYOUT_DESC"), kiPhoneLayout);
     SWITCH2(LOC(@"NEW_MINIPLAYER_STYLE"), LOC(@"NEW_MINIPLAYER_STYLE_DESC"), kBigYTMiniPlayer);

@@ -188,6 +188,8 @@ static NSString *const kCastingDiagnostics = @"castingDiagnostics_enabled";
 static NSString *const kCastingSponsorBlock = @"castingSponsorBlock_enabled";
 static NSString *const kMuteVideoPreviews = @"muteVideoPreviews_enabled";
 static NSString *const kHideCommunitiesShelf = @"hideCommunitiesShelf_enabled";
+static NSString *const kFitShelfCards = @"fitShelfCards_enabled";
+static NSString *const kFixRotateButton = @"fixRotateButton_enabled";
 
 // Defined in uYouPlusVersionSpoofer.xm: turns the App Version Spoofer on for a fresh install (rules are in the comment there).
 void setDefaultVersionSpoofer(NSArray *allKeys);

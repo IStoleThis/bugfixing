@@ -15,6 +15,10 @@
 // Version 3:
 //   * "Mute Video Previews" (uYouPlusMutedFeedPreviews.xm) on.
 //   * Community post shelves on the Home feed hidden (HideYouTubeFeatured.xm).
+// Version 4:
+//   * "Fit Shelf Cards to the Screen" (uYouPlusFitShelfCards.xm) on, and the community post shelves shown again (their cards are
+//     fitted instead of the shelves being hidden; the hide switch stays for whoever wants it).
+//   * "Fix the Rotate Button" (uYouPlusRotateButtonFix.xm) on.
 //
 // This is a versioned, run-once migration rather than "set it when the key is missing". An install that was updated from an
 // earlier build already holds stored values for some of these keys (the ad-block switches are written on the first launch),
@@ -29,7 +33,7 @@
 #import "uYouPlus.h"
 #import "UYTLog.h"
 
-static const NSInteger kForkDefaultsVersion = 3;
+static const NSInteger kForkDefaultsVersion = 4;
 static NSString *const kForkDefaultsVersionKey = @"bugfixingForkDefaultsVersion";
 
 void UYTApplyForkDefaults(void) {
@@ -70,12 +74,20 @@ void UYTApplyForkDefaults(void) {
             [defaults setBool:YES forKey:kHideCommunitiesShelf];
         }
 
+        if (applied < 4) {
+            // Community post cards fitted to the screen instead of hidden; uYou's rotate button no longer forces a side.
+            [defaults setBool:YES forKey:kFitShelfCards];
+            [defaults setBool:NO forKey:kHideCommunitiesShelf];
+            [defaults setBool:YES forKey:kFixRotateButton];
+        }
+
         [defaults setInteger:kForkDefaultsVersion forKey:kForkDefaultsVersionKey];
 
         UYTLogInstall();
-        UYTDebugInfo(@"ForkDefaults v%ld applied (this install was at v%ld): %@%@%@", (long)kForkDefaultsVersion, (long)applied,
+        UYTDebugInfo(@"ForkDefaults v%ld applied (this install was at v%ld): %@%@%@%@", (long)kForkDefaultsVersion, (long)applied,
             applied < 1 ? @"AdBlock Workaround on, Shorts/Create/uYou tabs hidden, YouTube featured shelf hidden, casting switches on; " : @"",
             applied < 2 ? @"SponsorBlock While Casting on, iSponsorBlock top bar button hidden; " : @"",
-            @"video previews muted, community post shelves hidden");
+            applied < 3 ? @"video previews muted; " : @"",
+            @"shelf cards fitted to the screen (community shelves shown), rotate button fixed");
     });
 }

@@ -342,6 +342,10 @@
 "HIDE_COMMUNITIES_SHELF_DESC" = "Hides the community post shelves on the Home feed (\"Communities you may like\" and \"<channel>'s Community\"). Their post cards can come out wider than the screen, with half of the picture cut off. Applies the next time the feed loads.";
 "MUTE_VIDEO_PREVIEWS" = "Mute Video Previews";
 "MUTE_VIDEO_PREVIEWS_DESC" = "Video previews in the feeds (Home, Subscriptions, Search) always play without sound, also after a volume button is pressed, and their speaker button is hidden. Opening the video plays it with sound as usual.";
+"FIT_SHELF_CARDS" = "Fit Shelf Cards to the Screen";
+"FIT_SHELF_CARDS_DESC" = "Cards in sideways shelves, such as community posts on the Home feed, are kept within the screen instead of running off the right edge: a card that would be wider is laid out at the width of the screen, with its picture scaled to fit. Experimental.";
+"FIX_ROTATE_BUTTON" = "Fix the Rotate Button";
+"FIX_ROTATE_BUTTON_DESC" = "uYou's rotate button in the player no longer forces the screen to one landscape side, which could show the video upside down. It still opens fullscreen, on the side the phone is held in.";
 "HIDE_HEADER_LINKS_UNDER_PROFILE" = "Ukryj linki w profilach użytkowników";
 "HIDE_HEADER_LINKS_UNDER_PROFILE_DESC" = "";
 "AUTO_HIDE_HOME_INDICATOR" = "Automatyczne ukrywanie przycisku strony głównej";
