@@ -14,7 +14,7 @@
 //     settings page instead.
 // Version 3:
 //   * "Mute Video Previews" (uYouPlusMutedFeedPreviews.xm) on.
-//   * "Communities you may like" shelf on the Home feed hidden (HideYouTubeFeatured.xm).
+//   * Community post shelves on the Home feed hidden (HideYouTubeFeatured.xm).
 //
 // This is a versioned, run-once migration rather than "set it when the key is missing". An install that was updated from an
 // earlier build already holds stored values for some of these keys (the ad-block switches are written on the first launch),
@@ -65,7 +65,7 @@ void UYTApplyForkDefaults(void) {
         }
 
         if (applied < 3) {
-            // Home feed: silent previews, no "Communities you may like" shelf.
+            // Home feed: silent previews, no community post shelves.
             [defaults setBool:YES forKey:kMuteVideoPreviews];
             [defaults setBool:YES forKey:kHideCommunitiesShelf];
         }
@@ -76,6 +76,6 @@ void UYTApplyForkDefaults(void) {
         UYTDebugInfo(@"ForkDefaults v%ld applied (this install was at v%ld): %@%@%@", (long)kForkDefaultsVersion, (long)applied,
             applied < 1 ? @"AdBlock Workaround on, Shorts/Create/uYou tabs hidden, YouTube featured shelf hidden, casting switches on; " : @"",
             applied < 2 ? @"SponsorBlock While Casting on, iSponsorBlock top bar button hidden; " : @"",
-            @"video previews muted, Communities you may like shelf hidden");
+            @"video previews muted, community post shelves hidden");
     });
 }

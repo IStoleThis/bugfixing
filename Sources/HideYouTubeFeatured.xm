@@ -16,11 +16,15 @@
 // a feed refresh, the debug log has what is needed to fix the match, a few lines at most per launch:
 //   [UYT-I] HideShelf candidate kept ...  a section that looks like a promo and was kept, with the text around the hint
 //
-// The same filter also drops the "Communities you may like" shelf (posts from channel communities) behind its own switch,
-// kHideCommunitiesShelf (on by default). In YouTube 21.38.2 the post cards of that shelf can come out wider than the screen, so
-// half of the picture and the text run off the right edge. The cards are laid out by YouTube's server (Elements), and the app
-// has no setting for their size, so the shelf is removed instead. It is matched by its title, "Communities you may like"
-// (English only). A community section that was kept shows up in the debug log as a candidate (hint "Communities").
+// The same filter also drops the community post shelves behind their own switch, kHideCommunitiesShelf (on by default):
+// "Communities you may like" and the shelf of one channel's community, "<channel>'s Community". In YouTube 21.38.2 the post cards
+// of these shelves can come out wider than the screen, so half of the picture and the text run off the right edge. The cards are
+// Elements, laid out from the server's description, in a sideways collection (ELMCollectionNode) that gives its items an
+// unlimited width (-constrainedSizeForItemWithSizingMode answers DBL_MAX for a horizontal flow layout); a card that sizes itself
+// by its picture then grows past the screen. The app has no setting for that, so the shelves are removed instead. They are
+// matched by their titles (English only, see kUYTCommunitiesShelfNames); a video whose own title contains "'s Community" in a
+// one-item section would be dropped as well. A community section that was kept shows up in the debug log as a candidate
+// (hint "Communit").
 #import "uYouPlus.h"
 #import "UYTLog.h"
 #import "UYTFeedText.h"
