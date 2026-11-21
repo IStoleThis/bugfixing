@@ -80,6 +80,7 @@ jobs:
 
     steps:
       - name: Checkout Main
+        id: checkout
         uses: actions/checkout@v7
         with:
           path: main
@@ -427,6 +428,9 @@ jobs:
         with:
           tag_name: v${{ env.YOUTUBE_VERSION }}-${{ env.UYOU_VERSION }}-(${{ github.run_number }})
           name: v${{ env.YOUTUBE_VERSION }}-${{ env.UYOU_VERSION }}-(${{ github.run_number }})
+          # Tag the commit that was built. Without this the new tag is made at the head of the default branch, which is
+          # wrong for a build of another branch or of commit_id.
+          target_commitish: ${{ steps.checkout.outputs.commit || github.sha }}
           files: |
             main/packages/*.ipa
             ${{ inputs.publish_altstore && 'altstore-source.json' || '' }}
